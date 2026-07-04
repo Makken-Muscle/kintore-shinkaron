@@ -661,6 +661,9 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: T.body, color: T.ink, paddingBottom: 92 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Anton&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap');
+        /* Viteテンプレートやブラウザ標準の余白・背景を打ち消す（スマホの白枠対策） */
+        html, body { margin: 0 !important; padding: 0 !important; background: #12141A !important; }
+        #root { max-width: none !important; margin: 0 !important; padding: 0 !important; text-align: initial !important; }
         @keyframes popIn { 0% { transform: scale(0.3) rotate(-8deg); opacity: 0; } 70% { transform: scale(1.1) rotate(2deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
         @keyframes shake { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-2.5deg); } 75% { transform: rotate(2.5deg); } }
         @keyframes fallIn { 0% { transform: translateY(-340px); opacity: 0; } 12% { opacity: 1; } 68% { transform: translateY(0); } 80% { transform: translateY(-13px); } 90% { transform: translateY(0); } 95% { transform: translateY(-4px); } 100% { transform: translateY(0); opacity: 1; } }
@@ -764,18 +767,19 @@ export default function App() {
               style={{ ...cardStyle, padding: 0, overflow: "hidden", position: "relative", cursor: "pointer", userSelect: "none" }}>
               {bubble && (
                 <div style={{
-                  position: "absolute", top: 14, left: "50%", transform: "translateX(-50%)",
-                  zIndex: 5, animation: "popIn 0.25s ease-out", pointerEvents: "none", textAlign: "center",
+                  position: "absolute", top: 12, right: 10, zIndex: 5, maxWidth: "58%",
+                  animation: "popIn 0.25s ease-out", pointerEvents: "none",
                 }}>
                   <div style={{
-                    background: "#fff", color: "#17181C", fontWeight: 900, fontSize: 15,
-                    padding: "9px 16px", borderRadius: 14, whiteSpace: "nowrap",
+                    background: "#fff", color: "#17181C", fontWeight: 900, fontSize: 14,
+                    padding: "9px 14px", borderRadius: 14, lineHeight: 1.5, textAlign: "center",
                     boxShadow: "0 4px 14px rgba(0,0,0,0.4)",
                   }}>
                     {bubble}
                   </div>
+                  {/* しっぽ（左下・キャラの顔の方向を指す） */}
                   <div style={{
-                    width: 12, height: 12, background: "#fff", margin: "-7px auto 0",
+                    width: 12, height: 12, background: "#fff", margin: "-7px 0 0 14px",
                     transform: "rotate(45deg)", borderRadius: 2,
                   }} />
                 </div>
