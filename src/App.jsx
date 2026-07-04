@@ -427,6 +427,9 @@ export default function App() {
   const [bubble, setBubble] = useState(null);
   const bubbleTimer = useRef(null);
   const [upgradeConfirm, setUpgradeConfirm] = useState(false);
+  const [prCelebration, setPrCelebration] = useState(null); // { exercise, from, to }
+  const [timer, setTimer] = useState({ total: 180, left: 180, running: false, endAt: null });
+  const [timerDone, setTimerDone] = useState(false);
   const [goalTarget, setGoalTarget] = useState(6);
 
   useEffect(() => {
@@ -538,6 +541,29 @@ export default function App() {
     ALL_PARTS.forEach((p) => { lv[p] = sc[p] / (sc[p] + 18); }); // セット数が増えるほど1に近づく
     return lv;
   }, [data.logs]);
+  // ---- ストリーク（中2日以内=間隔3日以内でトレーニングを続けた連続回数） ----
+  const streak = useMemo(() => {
+    const days = [...new Set(data.logs.map((l) => l.date))].sort().reverse();
+    if (!days.length) return 0;
+    const diff = (a, b) => Math.round((new Date(a + "T00:00:00") - new Date(b + "T00:00:00")) / 86400000);
+    if (diff(todayStr(), days[0]) > 3) return 0; // 3日を超えて空くと途切れる
+    let s = 1;
+    for (let i = 0; i < days.length - 1; i++) {
+      if (diff(days[i], days[i + 1]) <= 3) s++;
+      else break;
+    }
+    return s;
+  }, [data.logs]);
+
+  // ---- 今週（月曜はじまり）のトレーニング日数 ----
+  const weekCount = useMemo(() => {
+    const now = new Date(todayStr() + "T00:00:00");
+    const dow = (now.getDay() + 6) % 7; // 月=0
+    const monday = new Date(now); monday.setDate(now.getDate() - dow);
+    const mStr = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}-${String(monday.getDate()).padStart(2, "0")}`;
+    return new Set(data.logs.filter((l) => l.date >= mStr).map((l) => l.date)).size;
+  }, [data.logs]);
+
   const vehicle = data.vehicle || { type: "truck", resetBase: 0 };
   const isHeli = vehicle.type === "heli";
   const unitKg = isHeli ? HELI_KG : TRUCK_KG;
@@ -572,9 +598,43 @@ export default function App() {
     const ex = exercise === "__custom__" ? customEx.trim() : exercise;
     if (!ex || !weight || !reps || !sets) return;
     const log = { id: Date.now(), date: todayStr(), exercise: ex, weight: Number(weight), reps: Number(reps), sets: Number(sets) };
+    // 自己ベスト判定（同じ種目の過去最高重量を超えたか）
+    const prevBest = data.logs
+      .filter((x) => x.exercise === ex)
+      .reduce((m, x) => Math.max(m, x.weight), 0);
+    if (prevBest > 0 && log.weight > prevBest) {
+      log.pr = true;
+      setPrCelebration({ exercise: ex, from: prevBest, to: log.weight });
+    }
     save({ ...data, logs: [log, ...data.logs] });
     setWeight(""); setReps(""); setSets("");
   };
+
+  // ---- インターバルタイマー ----
+  const startTimer = (sec) => {
+    setTimerDone(false);
+    setTimer({ total: sec, left: sec, running: true, endAt: Date.now() + sec * 1000 });
+  };
+  const pauseTimer = () => setTimer((t) => ({ ...t, running: false }));
+  const resumeTimer = () => setTimer((t) => (t.left > 0 ? { ...t, running: true, endAt: Date.now() + t.left * 1000 } : t));
+  const resetTimer = () => { setTimerDone(false); setTimer((t) => ({ ...t, left: t.total, running: false, endAt: null })); };
+  const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
+  useEffect(() => {
+    if (!timer.running) return;
+    const id = setInterval(() => {
+      const left = Math.max(0, Math.round((timer.endAt - Date.now()) / 1000));
+      if (left <= 0) {
+        setTimer((t) => ({ ...t, left: 0, running: false }));
+        setTimerDone(true);
+        try { if (navigator.vibrate) navigator.vibrate([300, 120, 300]); } catch (e) { /* 非対応端末 */ }
+        setTimeout(() => setTimerDone(false), 3000);
+      } else {
+        setTimer((t) => ({ ...t, left }));
+      }
+    }, 250);
+    return () => clearInterval(id);
+  }, [timer.running, timer.endAt]);
 
   const deleteLog = (id) => save({ ...data, logs: data.logs.filter((l) => l.id !== id) });
 
@@ -700,6 +760,26 @@ export default function App() {
         {/* ===== 記録 ===== */}
         {tab === "log" && (
           <div style={{ display: "grid", gap: 14 }}>
+            {/* ストリーク＆今週 */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <section style={{ ...cardStyle, padding: "12px 14px", textAlign: "center" }}>
+                <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1 }}>🔥 ストリーク</p>
+                <p style={{ margin: "2px 0 0" }}>
+                  <span style={{ fontFamily: T.num, fontSize: 30, color: streak > 0 ? T.yellow : T.sub }}>{streak}</span>
+                  <span style={{ fontSize: 13, marginLeft: 3 }}>回連続</span>
+                </p>
+                <p style={{ margin: "2px 0 0", fontSize: 10, color: T.sub }}>中2日以内なら継続</p>
+              </section>
+              <section style={{ ...cardStyle, padding: "12px 14px", textAlign: "center" }}>
+                <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1 }}>📅 今週</p>
+                <p style={{ margin: "2px 0 0" }}>
+                  <span style={{ fontFamily: T.num, fontSize: 30 }}>{weekCount}</span>
+                  <span style={{ fontSize: 13, marginLeft: 3 }}>日</span>
+                </p>
+                <p style={{ margin: "2px 0 0", fontSize: 10, color: T.sub }}>月曜はじまり</p>
+              </section>
+            </div>
+
             <section style={cardStyle}>
               <h2 style={h2Style}>今日のトレーニングを記録</h2>
               <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
@@ -730,6 +810,66 @@ export default function App() {
               </div>
             </section>
 
+            {/* インターバルタイマー */}
+            <section style={{ ...cardStyle, borderLeft: timer.running ? `5px solid ${T.green}` : `5px solid ${T.line}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ ...h2Style, fontSize: 15 }}>⏱ インターバルタイマー</h3>
+                <span style={{
+                  fontFamily: T.num, fontSize: 34, letterSpacing: 1,
+                  color: timer.running ? T.green : timer.left === 0 ? T.red : T.ink,
+                }}>
+                  {fmtTime(timer.left)}
+                </span>
+              </div>
+              <div style={{ height: 8, background: T.surface2, borderRadius: 999, overflow: "hidden", margin: "10px 0" }}>
+                <div style={{
+                  height: "100%", borderRadius: 999, transition: "width 0.25s linear",
+                  background: `linear-gradient(90deg, ${T.green}, ${T.blue})`,
+                  width: `${timer.total ? (timer.left / timer.total) * 100 : 0}%`,
+                }} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+                {[
+                  { sec: 60, label: "1:00" },
+                  { sec: 90, label: "1:30" },
+                  { sec: 180, label: "3:00" },
+                  { sec: 300, label: "5:00" },
+                ].map((p) => (
+                  <button key={p.sec} onClick={() => startTimer(p.sec)}
+                    style={{
+                      padding: "10px 0", borderRadius: 10, fontFamily: T.num, fontSize: 15,
+                      border: `1.5px solid ${timer.total === p.sec ? T.green : T.line}`,
+                      background: T.surface2, color: timer.total === p.sec ? T.green : T.ink,
+                    }}>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
+                {timer.running ? (
+                  <button onClick={pauseTimer}
+                    style={{ padding: "11px", borderRadius: 10, border: "none", background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
+                    ⏸ 一時停止
+                  </button>
+                ) : (
+                  <button onClick={resumeTimer} disabled={timer.left === 0 || timer.left === timer.total}
+                    style={{
+                      padding: "11px", borderRadius: 10, border: "none", fontWeight: 800, fontFamily: T.body, fontSize: 14,
+                      background: T.surface2, color: timer.left === 0 || timer.left === timer.total ? "#555C6E" : T.green,
+                    }}>
+                    ▶ 再開
+                  </button>
+                )}
+                <button onClick={resetTimer}
+                  style={{ padding: "11px", borderRadius: 10, border: "none", background: T.surface2, color: T.sub, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
+                  ↺ リセット
+                </button>
+              </div>
+              <p style={{ margin: "10px 0 0", fontSize: 11, color: T.sub }}>
+                HPSの目安: 筋肥大60〜90秒 ／ パワー3分（爆発的挙上）／ 筋力5分
+              </p>
+            </section>
+
             {grouped.length === 0 ? (
               <section style={{ ...cardStyle, textAlign: "center", color: T.sub }}>
                 まだ記録がありません。<br />最初の1セットが進化の始まりです。
@@ -744,6 +884,12 @@ export default function App() {
                     <div key={l.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderTop: `1px solid ${T.line}` }}>
                       <div>
                         <strong style={{ fontWeight: 700 }}>{l.exercise}</strong>
+                        {l.pr && (
+                          <span style={{
+                            marginLeft: 6, fontSize: 10, fontWeight: 900, color: "#17181C",
+                            background: T.yellow, borderRadius: 6, padding: "2px 6px", verticalAlign: "middle",
+                          }}>PR</span>
+                        )}
                         <div style={{ color: T.sub, fontSize: 13, marginTop: 2 }}>
                           <span style={{ fontFamily: T.num, color: T.ink, fontSize: 15, letterSpacing: 0.5 }}>{l.weight}</span>kg ×{" "}
                           <span style={{ fontFamily: T.num, color: T.ink, fontSize: 15 }}>{l.reps}</span>回 ×{" "}
@@ -1165,6 +1311,45 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* 自己ベスト更新の祝福 */}
+      {prCelebration && (
+        <div onClick={() => setPrCelebration(null)} role="dialog" aria-label="自己ベスト更新"
+          style={{
+            position: "fixed", inset: 0, background: "rgba(10,11,15,0.92)", zIndex: 55,
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+          }}>
+          <div style={{ textAlign: "center", animation: "popIn 0.5s ease-out" }}>
+            <p style={{ fontSize: 44, margin: 0, animation: "shake 0.6s ease-in-out 0.4s 2" }}>🏋️</p>
+            <p style={{ color: T.yellow, fontWeight: 900, fontSize: 22, letterSpacing: 2, margin: "8px 0 4px" }}>
+              自己ベスト更新！！
+            </p>
+            <p style={{ color: "#fff", fontWeight: 900, fontSize: 19, margin: "0 0 10px" }}>{prCelebration.exercise}</p>
+            <p style={{ margin: 0 }}>
+              <span style={{ fontFamily: T.num, fontSize: 26, color: T.sub, textDecoration: "line-through" }}>{prCelebration.from}kg</span>
+              <span style={{ color: T.sub, fontSize: 20, margin: "0 10px" }}>→</span>
+              <span style={{ fontFamily: T.num, fontSize: 44, color: T.yellow, textShadow: `0 0 24px rgba(255,201,60,0.5)` }}>{prCelebration.to}kg</span>
+            </p>
+            <p style={{ color: "#fff", fontWeight: 800, fontSize: 15, marginTop: 14 }}>
+              「{CHARA_QUOTES[Math.floor(Math.random() * CHARA_QUOTES.length)]}」
+            </p>
+            <p style={{ color: T.sub, fontSize: 13, marginTop: 18 }}>タップして閉じる</p>
+          </div>
+        </div>
+      )}
+
+      {/* インターバル終了トースト */}
+      {timerDone && (
+        <div style={{
+          position: "fixed", top: 80, left: "50%", transform: "translateX(-50%)",
+          zIndex: 55, animation: "popIn 0.3s ease-out",
+          background: T.green, color: "#0D0F13", fontWeight: 900, fontSize: 15,
+          padding: "13px 22px", borderRadius: 14, boxShadow: "0 6px 20px rgba(61,220,151,0.4)",
+          whiteSpace: "nowrap",
+        }}>
+          🔔 インターバル終了！次のセット！
+        </div>
+      )}
 
       {/* ヘリ変更の確認 */}
       {upgradeConfirm && (
