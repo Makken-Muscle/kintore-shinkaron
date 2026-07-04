@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 // ============ 定数 ============
 const STORAGE_KEY = "kintore-shinkaron:data";
@@ -36,29 +36,54 @@ const EXERCISE_PRESETS = [
   "ラットプルダウン", "アームカール", "レッグプレス", "懸垂", "腹筋",
 ];
 
-const HPS_DAYS = {
-  H: {
-    label: "H — 筋肥大の日", color: "#FF5A3C",
-    scheme: "メイン種目 8〜12回 × 4セット", pct: 0.7, pctLabel: "1RMの65〜75%",
-    rest: "セット間 60〜90秒",
-    tips: "重量より「効かせる」意識。ネガティブ動作をゆっくり。",
-    sub: ["補助種目を2〜3種目（10〜15回×3セット）", "同部位を別角度から攻める", "最後は追い込みでパンプさせる"],
-  },
-  P: {
-    label: "P — パワーの日", color: "#3DDC97",
-    scheme: "メイン種目 3〜5回 × 5セット", pct: 0.65, pctLabel: "1RMの60〜70%",
-    rest: "セット間 2〜3分",
-    tips: "軽めの重量を全力スピードで挙げる。爆発的に！",
-    sub: ["1回1回を丁寧に、疲労を残さない", "潰れる手前で必ず止める", "フォームが崩れたら即終了"],
-  },
-  S: {
-    label: "S — 筋力の日", color: "#5B9BFF",
-    scheme: "メイン種目 2〜5回 × 5セット", pct: 0.875, pctLabel: "1RMの85〜92%",
-    rest: "セット間 3〜5分",
-    tips: "高重量・低回数。休憩はしっかり長めに取る。",
-    sub: ["ウォームアップを念入りに", "補助は最小限（1〜2種目）", "無理せずセーフティバー必須"],
-  },
+const HELI_KG = 2000; // ヘリコプター1機の重量目安（2t）
+
+// HPS 6週間プログラム（月:H 筋肥大 / 水:P パワー / 金:S 筋力）
+const DAY_TYPES = {
+  H: { key: "H", name: "筋肥大", color: "#FF5A3C", tip: "重量より「効かせる」意識。ネガティブ動作をゆっくり。" },
+  P: { key: "P", name: "パワー", color: "#3DDC97", tip: "全力スピードで爆発的に挙げる。潰れる手前で必ず止める。" },
+  S: { key: "S", name: "筋力", color: "#5B9BFF", tip: "高重量ゾーン。ウォームアップとセーフティバーを忘れずに。" },
 };
+const HPS_PROGRAM = [
+  { week: 1, days: [
+    { day: "月曜日", type: "H", pct: 0.75, reps: "8回", sets: 5, interval: "5分" },
+    { day: "水曜日", type: "P", pct: 0.80, reps: "1回", sets: 5, interval: "爆発的挙上・3分" },
+    { day: "金曜日", type: "S", pct: 0.85, reps: "限界まで", sets: 3, interval: "5分" },
+  ]},
+  { week: 2, days: [
+    { day: "月曜日", type: "H", pct: 0.75, reps: "8回", sets: 5, interval: "5分" },
+    { day: "水曜日", type: "P", pct: 0.80, reps: "1回", sets: 5, interval: "爆発的挙上・3分" },
+    { day: "金曜日", type: "S", pct: 0.875, reps: "限界まで", sets: 3, interval: "5分" },
+  ]},
+  { week: 3, days: [
+    { day: "月曜日", type: "H", pct: 0.75, reps: "8回", sets: 5, interval: "5分" },
+    { day: "水曜日", type: "P", pct: 0.85, reps: "1回", sets: 4, interval: "爆発的挙上・3分" },
+    { day: "金曜日", type: "S", pct: 0.90, reps: "限界まで", sets: 3, interval: "5分" },
+  ]},
+  { week: 4, days: [
+    { day: "月曜日", type: "H", pct: 0.75, reps: "8回", sets: 5, interval: "5分" },
+    { day: "水曜日", type: "P", pct: 0.85, reps: "1回", sets: 4, interval: "爆発的挙上・3分" },
+    { day: "金曜日", type: "S", pct: 0.90, reps: "限界まで", sets: 3, interval: "5分" },
+  ]},
+  { week: 5, days: [
+    { day: "月曜日", type: "H", pct: 0.75, reps: "8回", sets: 5, interval: "5分" },
+    { day: "水曜日", type: "P", pct: 0.90, reps: "1回", sets: 4, interval: "爆発的挙上・3分" },
+    { day: "金曜日", type: "S", pct: 0.925, reps: "限界まで", sets: 3, interval: "5分" },
+  ]},
+  { week: 6, days: [
+    { day: "月曜日", type: "H", pct: 0.75, reps: "8回", sets: 5, interval: "5分" },
+    { day: "水曜日", type: "P", pct: 0.90, reps: "1回", sets: 5, interval: "爆発的挙上・3分" },
+    { day: "金曜日", type: "S", pct: 0.95, reps: "1回", sets: 3, interval: "5分" },
+  ]},
+];
+
+// キャラのひとことセリフ
+const CHARA_QUOTES = [
+  "ナイスバルク！！！", "イエス筋肉！！！", "キレてる！キレてる！",
+  "パワーーーー！！", "筋肉は裏切らない！", "今日も追い込むぞ！",
+  "プロテインの時間だ！", "デカくなってる実感ある…！", "ハッ！（ポージング）",
+  "僧帽筋が喜んでる！", "超回復こそ正義！", "限界の1歩先へ！",
+];
 
 // ============ デザイントークン ============
 const T = {
@@ -344,6 +369,26 @@ function KeiTruck({ size = 56, color = "#F2F4F7" }) {
     </svg>
   );
 }
+
+function Heli({ size = 56, color = "#F2F4F7" }) {
+  return (
+    <svg viewBox="0 0 64 38" width={size} height={(size * 38) / 64} style={{ display: "block" }}>
+      {/* メインローター */}
+      <line x1="3" y1="5" x2="51" y2="5" stroke="#9AA3B5" strokeWidth="2" strokeLinecap="round" />
+      <rect x="25" y="5" width="4" height="5" rx="1" fill="#3A4152" />
+      {/* テールブーム */}
+      <path d="M 38 16 L 58 14.5 L 58 18.5 L 38 21 Z" fill={color} />
+      <rect x="56.5" y="7" width="2.5" height="9" rx="1" fill="#9AA3B5" />
+      {/* 機体 */}
+      <ellipse cx="26" cy="18.5" rx="15" ry="8.5" fill={color} />
+      <path d="M 32 12 Q 39.5 13.5 40.5 18.5 L 32 18.5 Z" fill="#5B9BFF" opacity="0.85" />
+      {/* スキッド */}
+      <line x1="15" y1="26" x2="17" y2="31" stroke="#3A4152" strokeWidth="2" />
+      <line x1="34" y1="26" x2="36" y2="31" stroke="#3A4152" strokeWidth="2" />
+      <line x1="12" y1="31.5" x2="41" y2="31.5" stroke="#3A4152" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}
 // ============ 共通スタイル ============
 const cardStyle = {
   background: T.surface, borderRadius: 16, padding: 16,
@@ -366,9 +411,11 @@ const primaryBtn = (disabled) => ({
 export default function App() {
   const [tab, setTab] = useState("log");
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState({ logs: [], goal: null, titles: [], goalHistory: [] });
+  const [data, setData] = useState({ logs: [], goal: null, titles: [], goalHistory: [], plan: null, vehicle: { type: "truck", resetBase: 0 } });
   const [celebration, setCelebration] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [ioMsg, setIoMsg] = useState(null); // { type: "ok"|"err", text }
+  const [importPreview, setImportPreview] = useState(null); // インポート確認用
 
   const [exercise, setExercise] = useState("ベンチプレス");
   const [customEx, setCustomEx] = useState("");
@@ -376,14 +423,26 @@ export default function App() {
   const [reps, setReps] = useState("");
   const [sets, setSets] = useState("");
   const [rm, setRm] = useState({ bench: "", squat: "", dead: "" });
-  const [plan, setPlan] = useState(null);
+  const [selectedWeek, setSelectedWeek] = useState(0);
+  const [bubble, setBubble] = useState(null);
+  const bubbleTimer = useRef(null);
+  const [upgradeConfirm, setUpgradeConfirm] = useState(false);
   const [goalTarget, setGoalTarget] = useState(6);
 
   useEffect(() => {
     (async () => {
       const raw = await storageGet(STORAGE_KEY);
       if (raw) {
-        try { setData(JSON.parse(raw)); } catch (e) { console.error("データの読み込みに失敗", e); }
+        try {
+          const d = JSON.parse(raw);
+          setData({
+            logs: d.logs || [], goal: d.goal ?? null,
+            titles: d.titles || [], goalHistory: d.goalHistory || [],
+            plan: d.plan ?? null,
+            vehicle: d.vehicle || { type: "truck", resetBase: 0 },
+          });
+          if (d.plan) setRm({ bench: String(d.plan.bench || ""), squat: String(d.plan.squat || ""), dead: String(d.plan.dead || "") });
+        } catch (e) { console.error("データの読み込みに失敗", e); }
       }
       setLoading(false);
     })();
@@ -392,6 +451,74 @@ export default function App() {
   const save = async (next) => {
     setData(next);
     await storageSet(STORAGE_KEY, JSON.stringify(next));
+  };
+
+  // ---- JSONエクスポート ----
+  const exportData = () => {
+    try {
+      const payload = {
+        app: "kintore-shinkaron",
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        data,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const d = new Date();
+      const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+      a.href = url;
+      a.download = `kintore-shinkaron-backup-${stamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setIoMsg({ type: "ok", text: "バックアップを書き出しました。" });
+    } catch (e) {
+      setIoMsg({ type: "err", text: "書き出しに失敗しました。" });
+    }
+  };
+
+  // ---- インポート（ファイル選択→中身を検証してプレビュー）----
+  const handleFile = (e) => {
+    setIoMsg(null);
+    const file = e.target.files?.[0];
+    e.target.value = ""; // 同じファイルを再選択できるようにリセット
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result));
+        const d = parsed && parsed.data ? parsed.data : parsed; // 素のdataでも許容
+        if (!d || !Array.isArray(d.logs)) throw new Error("形式が不正です");
+        const clean = {
+          logs: Array.isArray(d.logs) ? d.logs : [],
+          goal: d.goal ?? null,
+          titles: Array.isArray(d.titles) ? d.titles : [],
+          goalHistory: Array.isArray(d.goalHistory) ? d.goalHistory : [],
+          plan: d.plan ?? null,
+          vehicle: d.vehicle || { type: "truck", resetBase: 0 },
+        };
+        setImportPreview(clean);
+      } catch (err) {
+        setIoMsg({ type: "err", text: "読み込めませんでした。正しいバックアップファイルか確認してください。" });
+      }
+    };
+    reader.onerror = () => setIoMsg({ type: "err", text: "ファイルの読み込みに失敗しました。" });
+    reader.readAsText(file);
+  };
+
+  const confirmImport = async () => {
+    await save(importPreview);
+    if (importPreview.plan) {
+      setRm({
+        bench: String(importPreview.plan.bench || ""),
+        squat: String(importPreview.plan.squat || ""),
+        dead: String(importPreview.plan.dead || ""),
+      });
+    }
+    setImportPreview(null);
+    setIoMsg({ type: "ok", text: "データを復元しました。" });
   };
 
   const uniqueDays = useMemo(() => new Set(data.logs.map((l) => l.date)).size, [data.logs]);
@@ -411,8 +538,13 @@ export default function App() {
     ALL_PARTS.forEach((p) => { lv[p] = sc[p] / (sc[p] + 18); }); // セット数が増えるほど1に近づく
     return lv;
   }, [data.logs]);
-  const truckCount = Math.floor(totalVolume / TRUCK_KG);
-  const truckRemainder = totalVolume % TRUCK_KG;
+  const vehicle = data.vehicle || { type: "truck", resetBase: 0 };
+  const isHeli = vehicle.type === "heli";
+  const unitKg = isHeli ? HELI_KG : TRUCK_KG;
+  const vehicleVolume = Math.max(0, totalVolume - (vehicle.resetBase || 0));
+  const truckCount = Math.floor(vehicleVolume / unitKg);
+  const truckRemainder = vehicleVolume % unitKg;
+  const canUpgrade = !isHeli && truckCount >= 100;
 
   const goalDaysCount = useMemo(() => {
     if (!data.goal) return 0;
@@ -460,7 +592,30 @@ export default function App() {
   };
 
   const generatePlan = () => {
-    setPlan({ bench: Number(rm.bench) || 0, squat: Number(rm.squat) || 0, dead: Number(rm.dead) || 0 });
+    save({
+      ...data,
+      plan: {
+        bench: Number(rm.bench) || 0,
+        squat: Number(rm.squat) || 0,
+        dead: Number(rm.dead) || 0,
+        createdAt: todayStr(),
+      },
+    });
+    setSelectedWeek(0);
+  };
+
+  // ---- キャラのひとこと ----
+  const speak = () => {
+    const q = CHARA_QUOTES[Math.floor(Math.random() * CHARA_QUOTES.length)];
+    setBubble(q);
+    if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
+    bubbleTimer.current = setTimeout(() => setBubble(null), 2000);
+  };
+
+  // ---- 乗り物をヘリコプターへアップグレード ----
+  const upgradeToHeli = () => {
+    save({ ...data, vehicle: { type: "heli", resetBase: totalVolume } });
+    setUpgradeConfirm(false);
   };
 
   const grouped = useMemo(() => {
@@ -496,9 +651,10 @@ export default function App() {
   const tabs = [
     { id: "log", label: "記録", icon: "📝" },
     { id: "chara", label: "進化", icon: "💪" },
-    { id: "truck", label: "軽トラ", icon: "🛻" },
+    { id: "truck", label: isHeli ? "ヘリ" : "軽トラ", icon: isHeli ? "🚁" : "🛻" },
     { id: "plan", label: "計画", icon: "📋" },
     { id: "goal", label: "目標", icon: "🏆" },
+    { id: "settings", label: "設定", icon: "⚙️" },
   ];
 
   return (
@@ -604,11 +760,31 @@ export default function App() {
         {/* ===== 進化 ===== */}
         {tab === "chara" && (
           <div style={{ display: "grid", gap: 14 }}>
-            <section style={{ ...cardStyle, padding: 0, overflow: "hidden" }}>
+            <section onClick={speak}
+              style={{ ...cardStyle, padding: 0, overflow: "hidden", position: "relative", cursor: "pointer", userSelect: "none" }}>
+              {bubble && (
+                <div style={{
+                  position: "absolute", top: 14, left: "50%", transform: "translateX(-50%)",
+                  zIndex: 5, animation: "popIn 0.25s ease-out", pointerEvents: "none", textAlign: "center",
+                }}>
+                  <div style={{
+                    background: "#fff", color: "#17181C", fontWeight: 900, fontSize: 15,
+                    padding: "9px 16px", borderRadius: 14, whiteSpace: "nowrap",
+                    boxShadow: "0 4px 14px rgba(0,0,0,0.4)",
+                  }}>
+                    {bubble}
+                  </div>
+                  <div style={{
+                    width: 12, height: 12, background: "#fff", margin: "-7px auto 0",
+                    transform: "rotate(45deg)", borderRadius: 2,
+                  }} />
+                </div>
+              )}
               <MuscleCharacter levels={partLevels} />
               <div style={{ textAlign: "center", padding: "12px 16px 16px" }}>
                 <h2 style={{ fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: 2 }}>{STAGES[stageIdx].name}</h2>
                 <p style={{ margin: "4px 0 0", fontSize: 13, color: T.sub }}>{STAGES[stageIdx].desc}</p>
+                <p style={{ margin: "8px 0 0", fontSize: 11, color: "#555C6E" }}>👆 タップすると喋ります</p>
               </div>
             </section>
 
@@ -668,79 +844,114 @@ export default function App() {
           </div>
         )}
 
-        {/* ===== 軽トラ ===== */}
-        {tab === "truck" && (
-          <div style={{ display: "grid", gap: 14 }}>
-            <section style={{ ...cardStyle, textAlign: "center" }}>
-              <p style={{ margin: 0, fontSize: 12, color: T.sub, fontWeight: 700, letterSpacing: 2 }}>総挙上量</p>
-              <p style={{ fontFamily: T.num, fontSize: 44, margin: "2px 0 0", letterSpacing: 1 }}>
-                {totalVolume.toLocaleString()}<span style={{ fontSize: 18, marginLeft: 4 }}>kg</span>
-              </p>
-              <p style={{ margin: "6px 0 0", fontSize: 14, fontWeight: 700 }}>
-                = 軽トラ（最大積載{TRUCK_KG}kg）<span style={{ fontFamily: T.num, fontSize: 26, color: T.yellow, margin: "0 4px" }}>{truckCount}</span>台分！
-              </p>
-            </section>
-
-            <section style={cardStyle}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.sub, fontWeight: 700, marginBottom: 6 }}>
-                <span>次の1台まで</span>
-                <span style={{ color: T.ink }}>あと <span style={{ fontFamily: T.num, fontSize: 15, color: T.green }}>{(TRUCK_KG - truckRemainder).toLocaleString()}</span> kg</span>
-              </div>
-              <div style={{ height: 12, background: T.surface2, borderRadius: 999, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${(truckRemainder / TRUCK_KG) * 100}%`, background: `linear-gradient(90deg, ${T.green}, ${T.blue})`, borderRadius: 999, transition: "width 0.6s" }} />
-              </div>
-            </section>
-
-            <section style={{ ...cardStyle, background: `linear-gradient(180deg, ${T.surface} 0%, #171A21 100%)` }}>
-              <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 4 }}>積み上げた軽トラの山</h3>
-              {truckCount === 0 ? (
-                <div style={{ textAlign: "center", padding: "26px 0", color: T.sub, fontSize: 13 }}>
-                  <div style={{ opacity: 0.35, display: "inline-block" }}><KeiTruck size={64} /></div>
-                  <p style={{ margin: "10px 0 0" }}>まだ0台。合計{TRUCK_KG}kg挙げると最初の1台が積まれます！</p>
-                </div>
-              ) : (
-                <div style={{ paddingTop: 8 }}>
-                  {truckPile.overflow > 0 && (
-                    <p style={{ textAlign: "center", fontSize: 12, color: T.sub, margin: "0 0 4px" }}>
-                      …ほか <strong style={{ color: T.yellow }}>{truckPile.overflow}台</strong>（表示は100台まで）
-                    </p>
-                  )}
-                  {truckPile.rows.map((n, i) => {
-                    // 下の段から順に着地させる（globalIdx = 下から数えた台番号）
-                    const below = truckPile.rows.slice(i + 1).reduce((a, b) => a + b, 0);
-                    return (
-                      <div key={i} style={{ display: "flex", justifyContent: "center", gap: 4, marginTop: i === 0 ? 0 : -6 }}>
-                        {Array.from({ length: n }).map((_, j) => {
-                          const globalIdx = below + j;
-                          return (
-                            <div key={j} style={{
-                              animation: "fallIn 0.6s cubic-bezier(0.5, 0, 0.7, 0.4) both",
-                              animationDelay: `${Math.min(globalIdx, 40) * 0.07}s`,
-                            }}>
-                              <KeiTruck size={52} color={truckColor(globalIdx + truckPile.overflow)} />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                  <div style={{ height: 5, background: "#0D0F13", borderRadius: 3, margin: "2px 8px 0" }} />
-                  <p style={{ textAlign: "center", fontSize: 12, color: T.sub, margin: "10px 0 0" }}>
-                    あなたはこれまでに軽トラ{truckCount}台分の鉄を持ち上げました 🛻
-                  </p>
-                </div>
+        {/* ===== 軽トラ / ヘリ ===== */}
+        {tab === "truck" && (() => {
+          const Vehicle = isHeli ? Heli : KeiTruck;
+          const vName = isHeli ? "ヘリコプター" : "軽トラ";
+          const vUnit = isHeli ? "機" : "台";
+          const vSpec = isHeli ? `${HELI_KG / 1000}t/機` : `最大積載${TRUCK_KG}kg`;
+          return (
+            <div style={{ display: "grid", gap: 14 }}>
+              {canUpgrade && (
+                <section style={{
+                  ...cardStyle, borderLeft: `5px solid ${T.yellow}`,
+                  display: "flex", alignItems: "center", gap: 12,
+                }}>
+                  <span style={{ fontSize: 28 }}>🚁</span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontWeight: 800, fontSize: 14 }}>軽トラ100台を制覇！</p>
+                    <p style={{ margin: "2px 0 0", fontSize: 12, color: T.sub }}>次のステージ「ヘリコプター（2t/機）」に挑戦できます。</p>
+                  </div>
+                  <button onClick={() => setUpgradeConfirm(true)}
+                    style={{ padding: "10px 14px", borderRadius: 10, border: "none", background: T.yellow, color: "#17181C", fontWeight: 900, fontFamily: T.body, fontSize: 13, whiteSpace: "nowrap" }}>
+                    変更する
+                  </button>
+                </section>
               )}
-            </section>
-          </div>
-        )}
+
+              <section style={{ ...cardStyle, textAlign: "center" }}>
+                <p style={{ margin: 0, fontSize: 12, color: T.sub, fontWeight: 700, letterSpacing: 2 }}>
+                  {isHeli ? "ヘリ換算の挙上量" : "総挙上量"}
+                </p>
+                <p style={{ fontFamily: T.num, fontSize: 44, margin: "2px 0 0", letterSpacing: 1 }}>
+                  {vehicleVolume.toLocaleString()}<span style={{ fontSize: 18, marginLeft: 4 }}>kg</span>
+                </p>
+                <p style={{ margin: "6px 0 0", fontSize: 14, fontWeight: 700 }}>
+                  = {vName}（{vSpec}）<span style={{ fontFamily: T.num, fontSize: 26, color: T.yellow, margin: "0 4px" }}>{truckCount}</span>{vUnit}分！
+                </p>
+                {isHeli && (
+                  <p style={{ margin: "8px 0 0", fontSize: 11, color: T.sub }}>
+                    🛻 軽トラ時代を含む累計：{totalVolume.toLocaleString()}kg
+                  </p>
+                )}
+              </section>
+
+              <section style={cardStyle}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.sub, fontWeight: 700, marginBottom: 6 }}>
+                  <span>次の1{vUnit}まで</span>
+                  <span style={{ color: T.ink }}>あと <span style={{ fontFamily: T.num, fontSize: 15, color: T.green }}>{(unitKg - truckRemainder).toLocaleString()}</span> kg</span>
+                </div>
+                <div style={{ height: 12, background: T.surface2, borderRadius: 999, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${(truckRemainder / unitKg) * 100}%`, background: `linear-gradient(90deg, ${T.green}, ${T.blue})`, borderRadius: 999, transition: "width 0.6s" }} />
+                </div>
+              </section>
+
+              <section style={{ ...cardStyle, background: `linear-gradient(180deg, ${T.surface} 0%, #171A21 100%)` }}>
+                <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 4 }}>{isHeli ? "積み上げたヘリの山" : "積み上げた軽トラの山"}</h3>
+                {truckCount === 0 ? (
+                  <div style={{ textAlign: "center", padding: "26px 0", color: T.sub, fontSize: 13 }}>
+                    <div style={{ opacity: 0.35, display: "inline-block" }}><Vehicle size={64} /></div>
+                    <p style={{ margin: "10px 0 0" }}>
+                      {isHeli
+                        ? `ここから第2章。合計${HELI_KG.toLocaleString()}kg挙げると最初の1機が並びます！`
+                        : `まだ0台。合計${TRUCK_KG}kg挙げると最初の1台が積まれます！`}
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ paddingTop: 8 }}>
+                    {truckPile.overflow > 0 && (
+                      <p style={{ textAlign: "center", fontSize: 12, color: T.sub, margin: "0 0 4px" }}>
+                        …ほか <strong style={{ color: T.yellow }}>{truckPile.overflow}{vUnit}</strong>（表示は100{vUnit}まで）
+                      </p>
+                    )}
+                    {truckPile.rows.map((n, i) => {
+                      const below = truckPile.rows.slice(i + 1).reduce((a, b) => a + b, 0);
+                      return (
+                        <div key={i} style={{ display: "flex", justifyContent: "center", gap: 4, marginTop: i === 0 ? 0 : -6 }}>
+                          {Array.from({ length: n }).map((_, j) => {
+                            const globalIdx = below + j;
+                            return (
+                              <div key={j} style={{
+                                animation: "fallIn 0.6s cubic-bezier(0.5, 0, 0.7, 0.4) both",
+                                animationDelay: `${Math.min(globalIdx, 40) * 0.07}s`,
+                              }}>
+                                <Vehicle size={52} color={truckColor(globalIdx + truckPile.overflow)} />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                    <div style={{ height: 5, background: "#0D0F13", borderRadius: 3, margin: "2px 8px 0" }} />
+                    <p style={{ textAlign: "center", fontSize: 12, color: T.sub, margin: "10px 0 0" }}>
+                      {isHeli
+                        ? `あなたはヘリコプター${truckCount}機分の鉄を持ち上げました 🚁`
+                        : `あなたはこれまでに軽トラ${truckCount}台分の鉄を持ち上げました 🛻`}
+                    </p>
+                  </div>
+                )}
+              </section>
+            </div>
+          );
+        })()}
 
         {/* ===== 計画 ===== */}
         {tab === "plan" && (
           <div style={{ display: "grid", gap: 14 }}>
             <section style={cardStyle}>
-              <h2 style={h2Style}>HPSトレーニング計画</h2>
+              <h2 style={h2Style}>HPS 6週間プログラム</h2>
               <p style={{ fontSize: 13, color: T.sub, margin: "8px 0 12px", lineHeight: 1.7 }}>
-                1週間で <strong style={{ color: T.ink }}>筋肥大（H）→ パワー（P）→ 筋力（S）</strong> を回す計画法。BIG3の1RM（1回だけ挙げられる最大重量）を入れると推奨重量を計算します。
+                月曜<strong style={{ color: DAY_TYPES.H.color }}>筋肥大（H）</strong>・水曜<strong style={{ color: DAY_TYPES.P.color }}>パワー（P）</strong>・金曜<strong style={{ color: DAY_TYPES.S.color }}>筋力（S）</strong>を6週間かけて漸進させる計画。BIG3の1RM（1回だけ挙げられる最大重量）を入れると各週の推奨重量を計算します。
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                 {[
@@ -756,42 +967,65 @@ export default function App() {
                 ))}
               </div>
               <button onClick={generatePlan} style={{ ...primaryBtn(false), width: "100%", marginTop: 10 }}>
-                今週の計画を作る
+                {data.plan ? "計画を作り直す" : "6週間の計画を作る"}
               </button>
+              {data.plan && (
+                <p style={{ margin: "10px 0 0", fontSize: 11, color: T.sub, textAlign: "center" }}>
+                  ✓ 保存済み（{fmtDate(data.plan.createdAt)}作成）— アプリを閉じても消えません
+                </p>
+              )}
             </section>
 
-            {plan && ["H", "P", "S"].map((key, i) => {
-              const d = HPS_DAYS[key];
-              const dayName = ["1日目（例：月）", "2日目（例：水）", "3日目（例：金）"][i];
-              return (
-                <section key={key} style={{ ...cardStyle, borderLeft: `5px solid ${d.color}` }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                    <h3 style={{ fontSize: 16, fontWeight: 900, margin: 0, color: d.color, letterSpacing: 1 }}>{d.label}</h3>
-                    <span style={{ fontSize: 11, color: T.sub }}>{dayName}</span>
-                  </div>
-                  <p style={{ margin: "10px 0 2px", fontWeight: 800 }}>{d.scheme}</p>
-                  <p style={{ margin: 0, fontSize: 13, color: T.sub }}>{d.pctLabel} ／ {d.rest}</p>
-                  {(plan.bench > 0 || plan.squat > 0 || plan.dead > 0) && (
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0 0" }}>
-                      {[["ベンチ", plan.bench], ["スクワット", plan.squat], ["デッド", plan.dead]]
-                        .filter(([, v]) => v > 0).map(([n, v]) => (
-                          <span key={n} style={{ background: T.surface2, border: `1px solid ${T.line}`, borderRadius: 8, padding: "6px 10px", fontSize: 13, fontWeight: 700 }}>
-                            {n} <span style={{ fontFamily: T.num, fontSize: 15, color: d.color }}>{roundPlate(v * d.pct)}</span>kg
-                          </span>
-                        ))}
-                    </div>
-                  )}
-                  <p style={{ margin: "10px 0 6px", fontSize: 13, background: T.surface2, padding: "9px 11px", borderRadius: 8, color: T.ink }}>💡 {d.tips}</p>
-                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: T.sub, lineHeight: 1.8 }}>
-                    {d.sub.map((s) => <li key={s}>{s}</li>)}
-                  </ul>
-                </section>
-              );
-            })}
-            {plan && (
-              <p style={{ fontSize: 12, color: T.sub, margin: 0, padding: "0 4px" }}>
-                ※ 各日の間に休息日を1日以上はさむのがおすすめ。体調に合わせて重量は無理なく調整してください。
-              </p>
+            {data.plan && (
+              <>
+                {/* 週セレクタ */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 6 }}>
+                  {HPS_PROGRAM.map((w, i) => (
+                    <button key={w.week} onClick={() => setSelectedWeek(i)}
+                      style={{
+                        padding: "9px 0", borderRadius: 10, fontFamily: T.body, fontWeight: 900, fontSize: 12,
+                        border: `1.5px solid ${selectedWeek === i ? T.red : T.line}`,
+                        background: selectedWeek === i ? T.red : T.surface,
+                        color: selectedWeek === i ? "#fff" : T.sub,
+                      }}>
+                      W{w.week}
+                    </button>
+                  ))}
+                </div>
+
+                {HPS_PROGRAM[selectedWeek].days.map((d) => {
+                  const t = DAY_TYPES[d.type];
+                  return (
+                    <section key={d.day} style={{ ...cardStyle, borderLeft: `5px solid ${t.color}` }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                        <h3 style={{ fontSize: 16, fontWeight: 900, margin: 0, letterSpacing: 1 }}>
+                          {d.day}　<span style={{ color: t.color }}>{d.type}：{t.name}</span>
+                        </h3>
+                        <span style={{ fontFamily: T.num, fontSize: 14, color: T.sub }}>{(d.pct * 100).toFixed(1)}%</span>
+                      </div>
+                      <div style={{ display: "flex", gap: 14, margin: "10px 0 0", fontSize: 13 }}>
+                        <span><strong style={{ fontFamily: T.num, fontSize: 17 }}>{d.reps}</strong></span>
+                        <span>× <strong style={{ fontFamily: T.num, fontSize: 17 }}>{d.sets}</strong> セット</span>
+                        <span style={{ color: d.interval.includes("爆発") ? t.color : T.sub, fontWeight: 700 }}>{d.interval}</span>
+                      </div>
+                      {(data.plan.bench > 0 || data.plan.squat > 0 || data.plan.dead > 0) && (
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0 0" }}>
+                          {[["ベンチ", data.plan.bench], ["スクワット", data.plan.squat], ["デッド", data.plan.dead]]
+                            .filter(([, v]) => v > 0).map(([n, v]) => (
+                              <span key={n} style={{ background: T.surface2, border: `1px solid ${T.line}`, borderRadius: 8, padding: "6px 10px", fontSize: 13, fontWeight: 700 }}>
+                                {n} <span style={{ fontFamily: T.num, fontSize: 15, color: t.color }}>{roundPlate(v * d.pct)}</span>kg
+                              </span>
+                            ))}
+                        </div>
+                      )}
+                      <p style={{ margin: "10px 0 0", fontSize: 12, background: T.surface2, padding: "8px 11px", borderRadius: 8, color: T.sub }}>💡 {t.tip}</p>
+                    </section>
+                  );
+                })}
+                <p style={{ fontSize: 12, color: T.sub, margin: 0, padding: "0 4px", lineHeight: 1.7 }}>
+                  ※ 週が進むほど水曜・金曜の強度が上がります。体調に合わせて重量は無理なく調整し、フォームが崩れたらその日は終了してください。
+                </p>
+              </>
             )}
           </div>
         )}
@@ -868,7 +1102,134 @@ export default function App() {
             )}
           </div>
         )}
+
+        {/* ===== 設定 ===== */}
+        {tab === "settings" && (
+          <div style={{ display: "grid", gap: 14 }}>
+            <section style={cardStyle}>
+              <h2 style={h2Style}>データのバックアップ</h2>
+              <p style={{ fontSize: 13, color: T.sub, margin: "8px 0 14px", lineHeight: 1.7 }}>
+                記録はこの端末のブラウザ内だけに保存されています。機種変更やブラウザのデータ消去で消えるため、
+                <strong style={{ color: T.ink }}>ときどき書き出して保管</strong>しておくと安心です。別の端末へ引き継ぐときもこのファイルを使います。
+              </p>
+
+              <div style={{ display: "grid", gap: 10 }}>
+                <button onClick={exportData} style={{ ...primaryBtn(false), width: "100%" }}>
+                  ⬇ バックアップを書き出す（JSON）
+                </button>
+                <label style={{
+                  display: "block", textAlign: "center", padding: "13px", borderRadius: 12,
+                  border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink,
+                  fontWeight: 800, fontSize: 15, cursor: "pointer",
+                }}>
+                  ⬆ バックアップから復元する
+                  <input type="file" accept="application/json,.json" onChange={handleFile} style={{ display: "none" }} />
+                </label>
+              </div>
+
+              {ioMsg && (
+                <p style={{
+                  margin: "12px 0 0", fontSize: 13, fontWeight: 700, textAlign: "center",
+                  color: ioMsg.type === "ok" ? T.green : T.red,
+                }}>
+                  {ioMsg.type === "ok" ? "✓ " : "⚠ "}{ioMsg.text}
+                </p>
+              )}
+            </section>
+
+            <section style={cardStyle}>
+              <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 8 }}>現在のデータ</h3>
+              <div style={{ display: "grid", gap: 6, fontSize: 13 }}>
+                {[
+                  ["記録件数", `${data.logs.length} 件`],
+                  ["トレーニング日数", `${uniqueDays} 日`],
+                  ["獲得した称号", `${data.titles.length} 個`],
+                  ["過去の目標挑戦", `${data.goalHistory.length} 回`],
+                ].map(([k, v]) => (
+                  <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: `1px solid ${T.line}` }}>
+                    <span style={{ color: T.sub }}>{k}</span>
+                    <span style={{ fontWeight: 800 }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <p style={{ fontSize: 11, color: T.sub, padding: "0 4px", lineHeight: 1.7 }}>
+              ※ 復元すると今の記録はファイルの内容で<strong style={{ color: T.ink }}>すべて置き換わります</strong>。
+              大事な記録がある場合は、先にバックアップを書き出しておくことをおすすめします。
+            </p>
+          </div>
+        )}
       </main>
+
+      {/* ヘリ変更の確認 */}
+      {upgradeConfirm && (
+        <div onClick={() => setUpgradeConfirm(false)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(10,11,15,0.75)", zIndex: 60,
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+          }}>
+          <div role="dialog" aria-label="乗り物変更の確認" onClick={(e) => e.stopPropagation()}
+            style={{ ...cardStyle, width: "100%", maxWidth: 340, animation: "popIn 0.25s ease-out" }}>
+            <h3 style={{ ...h2Style, fontSize: 16 }}>🚁 ヘリコプターに変更しますか？</h3>
+            <p style={{ fontSize: 13, color: T.sub, margin: "10px 0", lineHeight: 1.8 }}>
+              次のステージは <strong style={{ color: T.ink }}>ヘリコプター（1機 = 2,000kg）</strong>。
+              変更するとカウントが<strong style={{ color: T.red }}>リセットされ、1機目からのスタート</strong>になります。
+            </p>
+            <p style={{ fontSize: 12, color: T.sub, margin: "0 0 14px" }}>
+              ※ トレーニング記録・キャラの成長・累計挙上量は消えません。一度変更すると軽トラには戻れません。
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <button onClick={() => setUpgradeConfirm(false)}
+                style={{ padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
+                キャンセル
+              </button>
+              <button onClick={upgradeToHeli}
+                style={{ padding: "12px", borderRadius: 10, border: "none", background: T.yellow, color: "#17181C", fontWeight: 900, fontFamily: T.body, fontSize: 14 }}>
+                変更する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* インポート確認 */}
+      {importPreview && (
+        <div onClick={() => setImportPreview(null)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(10,11,15,0.75)", zIndex: 60,
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+          }}>
+          <div role="dialog" aria-label="復元の確認" onClick={(e) => e.stopPropagation()}
+            style={{ ...cardStyle, width: "100%", maxWidth: 340, animation: "popIn 0.25s ease-out" }}>
+            <h3 style={{ ...h2Style, fontSize: 16 }}>このデータで復元しますか？</h3>
+            <div style={{ background: T.surface2, borderRadius: 10, padding: "10px 12px", margin: "12px 0", fontSize: 13, display: "grid", gap: 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: T.sub }}>記録件数</span><strong>{importPreview.logs.length} 件</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: T.sub }}>称号</span><strong>{importPreview.titles.length} 個</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: T.sub }}>目標履歴</span><strong>{importPreview.goalHistory.length} 回</strong>
+              </div>
+            </div>
+            <p style={{ fontSize: 12, color: T.red, margin: "0 0 14px", fontWeight: 700 }}>
+              ⚠ 今この端末にある記録（{data.logs.length}件）はすべて上書きされます。
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <button onClick={() => setImportPreview(null)}
+                style={{ padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
+                キャンセル
+              </button>
+              <button onClick={confirmImport}
+                style={{ padding: "12px", borderRadius: 10, border: "none", background: T.red, color: "#fff", fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
+                復元する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 削除確認 */}
       {deleteTarget && (
