@@ -1314,12 +1314,20 @@ export default function App() {
 
       {/* フッター */}
       <footer style={{ maxWidth: 520, margin: "0 auto", padding: "4px 16px 20px", textAlign: "center" }}>
-        <p style={{ margin: 0, fontSize: 11, color: "#6B7386" }}>
-          © 2026 筋トレ進化論{" "}
-          <a href="/privacy.html" style={{ color: "#6B7386", textDecoration: "underline", marginLeft: 8 }}>
-            プライバシーポリシー
-          </a>
+        <p style={{ margin: "0 0 6px", fontSize: 11, color: "#6B7386" }}>
+          {[
+            { href: "/guide.html", label: "使い方ガイド" },
+            { href: "/articles.html", label: "コラム" },
+            { href: "/contact.html", label: "お問い合わせ" },
+            { href: "/privacy.html", label: "プライバシーポリシー" },
+          ].map((l, i) => (
+            <span key={l.href}>
+              {i > 0 && "・"}
+              <a href={l.href} style={{ color: "#6B7386", textDecoration: "underline" }}>{l.label}</a>
+            </span>
+          ))}
         </p>
+        <p style={{ margin: 0, fontSize: 11, color: "#6B7386" }}>© 2026 筋トレ進化論</p>
       </footer>
 
       {/* 自己ベスト更新の祝福 */}
