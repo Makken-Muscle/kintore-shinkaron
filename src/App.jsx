@@ -159,6 +159,13 @@ function classifyExercise(name) {
   for (const r of PART_RULES) if (r.re.test(name)) return r.parts;
   return ALL_PARTS.map((p) => [p, 1 / 6]); // 不明な種目は全身に少しずつ
 }
+// 記録に部位情報があればそれを優先（マイ種目は選んだ部位に均等配分）
+function partsOfLog(log) {
+  if (Array.isArray(log.parts) && log.parts.length > 0) {
+    return log.parts.map((p) => [p, 1 / log.parts.length]);
+  }
+  return classifyExercise(log.exercise);
+}
 
 // ============ キャラクターSVG（部位別成長・自然な筋肥大） ============
 const midPt = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
@@ -411,14 +418,17 @@ const primaryBtn = (disabled) => ({
 export default function App() {
   const [tab, setTab] = useState("log");
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState({ logs: [], goal: null, titles: [], goalHistory: [], plan: null, vehicle: { type: "truck", resetBase: 0 } });
+  const [data, setData] = useState({ logs: [], goal: null, titles: [], goalHistory: [], plan: null, vehicle: { type: "truck", resetBase: 0 }, customExercises: [] });
   const [celebration, setCelebration] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [ioMsg, setIoMsg] = useState(null); // { type: "ok"|"err", text }
   const [importPreview, setImportPreview] = useState(null); // インポート確認用
 
   const [exercise, setExercise] = useState("ベンチプレス");
-  const [customEx, setCustomEx] = useState("");
+  const [customEx, setCustomEx] = useState(""); // 新しいマイ種目の名前
+  const [newExParts, setNewExParts] = useState([]); // 新しいマイ種目の対象部位
+  const [exMsg, setExMsg] = useState(null); // マイ種目追加時のエラー表示
+  const [deleteExTarget, setDeleteExTarget] = useState(null); // マイ種目の削除確認
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   const [sets, setSets] = useState("");
@@ -443,6 +453,7 @@ export default function App() {
             titles: d.titles || [], goalHistory: d.goalHistory || [],
             plan: d.plan ?? null,
             vehicle: d.vehicle || { type: "truck", resetBase: 0 },
+            customExercises: d.customExercises || [],
           });
           if (d.plan) setRm({ bench: String(d.plan.bench || ""), squat: String(d.plan.squat || ""), dead: String(d.plan.dead || "") });
         } catch (e) { console.error("データの読み込みに失敗", e); }
@@ -501,6 +512,7 @@ export default function App() {
           goalHistory: Array.isArray(d.goalHistory) ? d.goalHistory : [],
           plan: d.plan ?? null,
           vehicle: d.vehicle || { type: "truck", resetBase: 0 },
+          customExercises: Array.isArray(d.customExercises) ? d.customExercises : [],
         };
         setImportPreview(clean);
       } catch (err) {
@@ -535,7 +547,7 @@ export default function App() {
   const partLevels = useMemo(() => {
     const sc = { chest: 0, shoulder: 0, arm: 0, back: 0, leg: 0, abs: 0 };
     data.logs.forEach((l) => {
-      classifyExercise(l.exercise).forEach(([p, w]) => { sc[p] += (l.sets || 1) * w; });
+      partsOfLog(l).forEach(([p, w]) => { sc[p] += (l.sets || 1) * w; });
     });
     const lv = {};
     ALL_PARTS.forEach((p) => { lv[p] = sc[p] / (sc[p] + 18); }); // セット数が増えるほど1に近づく
@@ -595,9 +607,12 @@ export default function App() {
   }, [goalDaysCount, data.goal, loading]); // eslint-disable-line
 
   const addLog = () => {
-    const ex = exercise === "__custom__" ? customEx.trim() : exercise;
-    if (!ex || !weight || !reps || !sets) return;
+    const ex = exercise;
+    if (!ex || ex === "__add__" || !weight || !reps || !sets) return;
     const log = { id: Date.now(), date: todayStr(), exercise: ex, weight: Number(weight), reps: Number(reps), sets: Number(sets) };
+    // マイ種目なら、選んだ部位を記録自体に持たせる（種目を後で削除しても成長が崩れない）
+    const custom = data.customExercises.find((c) => c.name === ex);
+    if (custom) log.parts = [...custom.parts];
     // 自己ベスト判定（同じ種目の過去最高重量を超えたか）
     const prevBest = data.logs
       .filter((x) => x.exercise === ex)
@@ -637,6 +652,27 @@ export default function App() {
   }, [timer.running, timer.endAt]);
 
   const deleteLog = (id) => save({ ...data, logs: data.logs.filter((l) => l.id !== id) });
+
+  // ---- マイ種目の追加・削除 ----
+  const addCustomExercise = () => {
+    const name = customEx.trim();
+    if (!name || newExParts.length === 0) return;
+    if (EXERCISE_PRESETS.includes(name) || data.customExercises.some((c) => c.name === name)) {
+      setExMsg("同じ名前の種目がすでにあります");
+      return;
+    }
+    // 部位バーの表示順で保存
+    const parts = ALL_PARTS.filter((p) => newExParts.includes(p));
+    save({ ...data, customExercises: [...data.customExercises, { id: Date.now(), name, parts }] });
+    setExercise(name); // 追加した種目をそのまま選択状態に
+    setCustomEx(""); setNewExParts([]); setExMsg(null);
+  };
+
+  const deleteCustomExercise = (id) => {
+    const target = data.customExercises.find((c) => c.id === id);
+    save({ ...data, customExercises: data.customExercises.filter((c) => c.id !== id) });
+    if (target && exercise === target.name) setExercise(EXERCISE_PRESETS[0]);
+  };
 
   const startGoal = () => {
     const start = todayStr();
@@ -783,12 +819,55 @@ export default function App() {
             <section style={cardStyle}>
               <h2 style={h2Style}>今日のトレーニングを記録</h2>
               <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
-                <select value={exercise} onChange={(e) => setExercise(e.target.value)} style={inputStyle}>
-                  {EXERCISE_PRESETS.map((e) => <option key={e} value={e}>{e}</option>)}
-                  <option value="__custom__">その他（自由入力）</option>
+                <select value={exercise} onChange={(e) => { setExercise(e.target.value); setExMsg(null); }} style={inputStyle}>
+                  <optgroup label="基本種目">
+                    {EXERCISE_PRESETS.map((e) => <option key={e} value={e}>{e}</option>)}
+                  </optgroup>
+                  {data.customExercises.length > 0 && (
+                    <optgroup label="マイ種目">
+                      {data.customExercises.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+                    </optgroup>
+                  )}
+                  <option value="__add__">＋ 新しい種目を追加</option>
                 </select>
-                {exercise === "__custom__" && (
-                  <input style={inputStyle} placeholder="種目名を入力" value={customEx} onChange={(e) => setCustomEx(e.target.value)} />
+                {exercise === "__add__" && (
+                  <div style={{ background: T.surface2, borderRadius: 12, padding: 12, display: "grid", gap: 10, border: `1.5px dashed ${T.line}` }}>
+                    <input style={{ ...inputStyle, background: T.surface }} placeholder="種目名（例: インクラインベンチ）"
+                      value={customEx} onChange={(e) => { setCustomEx(e.target.value); setExMsg(null); }} />
+                    <div>
+                      <p style={{ margin: "0 0 7px", fontSize: 12, fontWeight: 700, color: T.sub }}>効かせる部位（複数選択できます）</p>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {ALL_PARTS.map((p) => {
+                          const on = newExParts.includes(p);
+                          return (
+                            <button key={p}
+                              onClick={() => setNewExParts((prev) => prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p])}
+                              style={{
+                                padding: "8px 15px", borderRadius: 999, fontSize: 13, fontWeight: 800, fontFamily: T.body,
+                                border: `1.5px solid ${on ? PART_COLORS[p] : T.line}`,
+                                background: on ? PART_COLORS[p] : T.surface,
+                                color: on ? "#17181C" : T.sub,
+                              }}>
+                              {on ? "✓ " : ""}{PART_LABELS[p]}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    {exMsg && <p style={{ margin: 0, fontSize: 12, color: T.red, fontWeight: 700 }}>⚠ {exMsg}</p>}
+                    <button onClick={addCustomExercise}
+                      disabled={!customEx.trim() || newExParts.length === 0}
+                      style={{
+                        padding: "12px", borderRadius: 10, border: "none", fontFamily: T.body, fontWeight: 800, fontSize: 14,
+                        background: !customEx.trim() || newExParts.length === 0 ? "#3A3F4C" : T.green,
+                        color: !customEx.trim() || newExParts.length === 0 ? "#777E8F" : "#0D0F13",
+                      }}>
+                      この種目をマイ種目に追加
+                    </button>
+                    <p style={{ margin: 0, fontSize: 11, color: T.sub, lineHeight: 1.6 }}>
+                      追加した種目はこの端末だけに保存され、選んだ部位の成長に反映されます。
+                    </p>
+                  </div>
                 )}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                   {[
@@ -803,12 +882,39 @@ export default function App() {
                   ))}
                 </div>
                 <button onClick={addLog}
-                  disabled={!weight || !reps || !sets || (exercise === "__custom__" && !customEx.trim())}
-                  style={primaryBtn(!weight || !reps || !sets || (exercise === "__custom__" && !customEx.trim()))}>
+                  disabled={!weight || !reps || !sets || exercise === "__add__"}
+                  style={primaryBtn(!weight || !reps || !sets || exercise === "__add__")}>
                   記録する
                 </button>
               </div>
             </section>
+
+            {/* マイ種目の管理 */}
+            {data.customExercises.length > 0 && (
+              <section style={cardStyle}>
+                <h3 style={{ ...h2Style, fontSize: 15 }}>💪 マイ種目</h3>
+                <p style={{ fontSize: 12, color: T.sub, margin: "6px 0 4px" }}>
+                  削除しても、過去の記録とキャラの成長はそのまま残ります。
+                </p>
+                {data.customExercises.map((c) => (
+                  <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderTop: `1px solid ${T.line}`, marginTop: 8 }}>
+                    <div>
+                      <strong style={{ fontWeight: 700 }}>{c.name}</strong>
+                      <div style={{ display: "flex", gap: 5, marginTop: 5, flexWrap: "wrap" }}>
+                        {c.parts.map((p) => (
+                          <span key={p} style={{
+                            fontSize: 10, fontWeight: 800, padding: "2px 9px", borderRadius: 999,
+                            border: `1px solid ${PART_COLORS[p]}`, color: PART_COLORS[p],
+                          }}>{PART_LABELS[p]}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <button onClick={() => setDeleteExTarget(c)} aria-label="マイ種目を削除"
+                      style={{ border: "none", background: "none", color: "#555C6E", fontSize: 18, padding: 4 }}>✕</button>
+                  </div>
+                ))}
+              </section>
+            )}
 
             {/* インターバルタイマー */}
             <section style={{ ...cardStyle, borderLeft: timer.running ? `5px solid ${T.green}` : `5px solid ${T.line}` }}>
@@ -1293,6 +1399,7 @@ export default function App() {
                 {[
                   ["記録件数", `${data.logs.length} 件`],
                   ["トレーニング日数", `${uniqueDays} 日`],
+                  ["マイ種目", `${data.customExercises.length} 個`],
                   ["獲得した称号", `${data.titles.length} 個`],
                   ["過去の目標挑戦", `${data.goalHistory.length} 回`],
                 ].map(([k, v]) => (
@@ -1461,6 +1568,44 @@ export default function App() {
                 キャンセル
               </button>
               <button onClick={() => { deleteLog(deleteTarget.id); setDeleteTarget(null); }}
+                style={{ padding: "12px", borderRadius: 10, border: "none", background: T.red, color: "#fff", fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
+                削除する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* マイ種目の削除確認 */}
+      {deleteExTarget && (
+        <div onClick={() => setDeleteExTarget(null)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(10,11,15,0.75)", zIndex: 60,
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+          }}>
+          <div role="dialog" aria-label="マイ種目削除の確認" onClick={(e) => e.stopPropagation()}
+            style={{ ...cardStyle, width: "100%", maxWidth: 340, animation: "popIn 0.25s ease-out" }}>
+            <h3 style={{ ...h2Style, fontSize: 16 }}>このマイ種目を削除しますか？</h3>
+            <div style={{ background: T.surface2, borderRadius: 10, padding: "10px 12px", margin: "12px 0" }}>
+              <strong style={{ fontWeight: 800 }}>{deleteExTarget.name}</strong>
+              <div style={{ display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" }}>
+                {deleteExTarget.parts.map((p) => (
+                  <span key={p} style={{
+                    fontSize: 10, fontWeight: 800, padding: "2px 9px", borderRadius: 999,
+                    border: `1px solid ${PART_COLORS[p]}`, color: PART_COLORS[p],
+                  }}>{PART_LABELS[p]}</span>
+                ))}
+              </div>
+            </div>
+            <p style={{ fontSize: 12, color: T.sub, margin: "0 0 14px", lineHeight: 1.7 }}>
+              種目の選択肢から消えるだけで、この種目で記録したトレーニングとキャラの成長は残ります。
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <button onClick={() => setDeleteExTarget(null)}
+                style={{ padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
+                キャンセル
+              </button>
+              <button onClick={() => { deleteCustomExercise(deleteExTarget.id); setDeleteExTarget(null); }}
                 style={{ padding: "12px", borderRadius: 10, border: "none", background: T.red, color: "#fff", fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
                 削除する
               </button>
