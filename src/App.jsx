@@ -73,7 +73,7 @@ const HPS_PROGRAM = [
   { week: 6, days: [
     { day: "月曜日", type: "H", pct: 0.75, reps: "8回", sets: 5, interval: "5分" },
     { day: "水曜日", type: "P", pct: 0.90, reps: "1回", sets: 5, interval: "爆発的挙上・3分" },
-    { day: "金曜日", type: "S", pct: 0.95, reps: "1回", sets: 3, interval: "5分" },
+    { day: "金曜日", type: "S", pct: 0.95, reps: "限界まで", sets: 3, interval: "5分" },
   ]},
 ];
 
@@ -763,6 +763,7 @@ export default function App() {
         @keyframes popIn { 0% { transform: scale(0.3) rotate(-8deg); opacity: 0; } 70% { transform: scale(1.1) rotate(2deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
         @keyframes shake { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-2.5deg); } 75% { transform: rotate(2.5deg); } }
         @keyframes fallIn { 0% { transform: translateY(-340px); opacity: 0; } 12% { opacity: 1; } 68% { transform: translateY(0); } 80% { transform: translateY(-13px); } 90% { transform: translateY(0); } 95% { transform: translateY(-4px); } 100% { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeUp { 0% { opacity: 0; transform: translateY(14px); } 100% { opacity: 1; transform: translateY(0); } }
         button { cursor: pointer; }
         input:focus, select:focus { border-color: #FF5A3C !important; }
         select option { background: #242834; color: #EDEFF3; }
@@ -1249,10 +1250,15 @@ export default function App() {
                   ))}
                 </div>
 
-                {HPS_PROGRAM[selectedWeek].days.map((d) => {
+                {HPS_PROGRAM[selectedWeek].days.map((d, i) => {
                   const t = DAY_TYPES[d.type];
                   return (
-                    <section key={d.day} style={{ ...cardStyle, borderLeft: `5px solid ${t.color}` }}>
+                    <section key={`${selectedWeek}-${d.day}`}
+                      style={{
+                        ...cardStyle, borderLeft: `5px solid ${t.color}`,
+                        animation: "fadeUp 0.45s ease-out both",
+                        animationDelay: `${i * 0.1}s`,
+                      }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                         <h3 style={{ fontSize: 16, fontWeight: 900, margin: 0, letterSpacing: 1 }}>
                           {d.day}　<span style={{ color: t.color }}>{d.type}：{t.name}</span>
