@@ -429,6 +429,9 @@ export default function App() {
   const [newExParts, setNewExParts] = useState([]); // 新しいマイ種目の対象部位
   const [exMsg, setExMsg] = useState(null); // マイ種目追加時のエラー表示
   const [deleteExTarget, setDeleteExTarget] = useState(null); // マイ種目の削除確認
+  const [planRecord, setPlanRecord] = useState(null); // 計画タブからのクイック記録フォーム
+  const [planSavedMsg, setPlanSavedMsg] = useState(false); // 記録完了トースト
+  const planToastTimer = useRef(null);
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   const [sets, setSets] = useState("");
@@ -606,10 +609,9 @@ export default function App() {
     }
   }, [goalDaysCount, data.goal, loading]); // eslint-disable-line
 
-  const addLog = () => {
-    const ex = exercise;
-    if (!ex || ex === "__add__" || !weight || !reps || !sets) return;
-    const log = { id: Date.now(), date: todayStr(), exercise: ex, weight: Number(weight), reps: Number(reps), sets: Number(sets) };
+  // 記録タブ・計画タブ共通の記録処理
+  const recordLog = (ex, w, r, s) => {
+    const log = { id: Date.now(), date: todayStr(), exercise: ex, weight: Number(w), reps: Number(r), sets: Number(s) };
     // マイ種目なら、選んだ部位を記録自体に持たせる（種目を後で削除しても成長が崩れない）
     const custom = data.customExercises.find((c) => c.name === ex);
     if (custom) log.parts = [...custom.parts];
@@ -622,7 +624,22 @@ export default function App() {
       setPrCelebration({ exercise: ex, from: prevBest, to: log.weight });
     }
     save({ ...data, logs: [log, ...data.logs] });
+  };
+
+  const addLog = () => {
+    if (!exercise || exercise === "__add__" || !weight || !reps || !sets) return;
+    recordLog(exercise, weight, reps, sets);
     setWeight(""); setReps(""); setSets("");
+  };
+
+  // ---- 計画タブからのクイック記録 ----
+  const savePlanRecord = () => {
+    if (!planRecord || !planRecord.weight || !planRecord.reps || !planRecord.sets) return;
+    recordLog(planRecord.exercise, planRecord.weight, planRecord.reps, planRecord.sets);
+    setPlanRecord(null);
+    setPlanSavedMsg(true);
+    if (planToastTimer.current) clearTimeout(planToastTimer.current);
+    planToastTimer.current = setTimeout(() => setPlanSavedMsg(false), 2500);
   };
 
   // ---- インターバルタイマー ----
@@ -817,6 +834,66 @@ export default function App() {
               </section>
             </div>
 
+            {/* インターバルタイマー */}
+            <section style={{ ...cardStyle, borderLeft: timer.running ? `5px solid ${T.green}` : `5px solid ${T.line}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ ...h2Style, fontSize: 15 }}>⏱ インターバルタイマー</h3>
+                <span style={{
+                  fontFamily: T.num, fontSize: 34, letterSpacing: 1,
+                  color: timer.running ? T.green : timer.left === 0 ? T.red : T.ink,
+                }}>
+                  {fmtTime(timer.left)}
+                </span>
+              </div>
+              <div style={{ height: 8, background: T.surface2, borderRadius: 999, overflow: "hidden", margin: "10px 0" }}>
+                <div style={{
+                  height: "100%", borderRadius: 999, transition: "width 0.25s linear",
+                  background: `linear-gradient(90deg, ${T.green}, ${T.blue})`,
+                  width: `${timer.total ? (timer.left / timer.total) * 100 : 0}%`,
+                }} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+                {[
+                  { sec: 60, label: "1:00" },
+                  { sec: 90, label: "1:30" },
+                  { sec: 180, label: "3:00" },
+                  { sec: 300, label: "5:00" },
+                ].map((p) => (
+                  <button key={p.sec} onClick={() => startTimer(p.sec)}
+                    style={{
+                      padding: "10px 0", borderRadius: 10, fontFamily: T.num, fontSize: 15,
+                      border: `1.5px solid ${timer.total === p.sec ? T.green : T.line}`,
+                      background: T.surface2, color: timer.total === p.sec ? T.green : T.ink,
+                    }}>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
+                {timer.running ? (
+                  <button onClick={pauseTimer}
+                    style={{ padding: "11px", borderRadius: 10, border: "none", background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
+                    ⏸ 一時停止
+                  </button>
+                ) : (
+                  <button onClick={resumeTimer} disabled={timer.left === 0 || timer.left === timer.total}
+                    style={{
+                      padding: "11px", borderRadius: 10, border: "none", fontWeight: 800, fontFamily: T.body, fontSize: 14,
+                      background: T.surface2, color: timer.left === 0 || timer.left === timer.total ? "#555C6E" : T.green,
+                    }}>
+                    ▶ 再開
+                  </button>
+                )}
+                <button onClick={resetTimer}
+                  style={{ padding: "11px", borderRadius: 10, border: "none", background: T.surface2, color: T.sub, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
+                  ↺ リセット
+                </button>
+              </div>
+              <p style={{ margin: "10px 0 0", fontSize: 11, color: T.sub }}>
+                HPSの目安: 筋肥大60〜90秒 ／ パワー3分（爆発的挙上）／ 筋力5分
+              </p>
+            </section>
+
             <section style={cardStyle}>
               <h2 style={h2Style}>今日のトレーニングを記録</h2>
               <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
@@ -916,66 +993,6 @@ export default function App() {
                 ))}
               </section>
             )}
-
-            {/* インターバルタイマー */}
-            <section style={{ ...cardStyle, borderLeft: timer.running ? `5px solid ${T.green}` : `5px solid ${T.line}` }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ ...h2Style, fontSize: 15 }}>⏱ インターバルタイマー</h3>
-                <span style={{
-                  fontFamily: T.num, fontSize: 34, letterSpacing: 1,
-                  color: timer.running ? T.green : timer.left === 0 ? T.red : T.ink,
-                }}>
-                  {fmtTime(timer.left)}
-                </span>
-              </div>
-              <div style={{ height: 8, background: T.surface2, borderRadius: 999, overflow: "hidden", margin: "10px 0" }}>
-                <div style={{
-                  height: "100%", borderRadius: 999, transition: "width 0.25s linear",
-                  background: `linear-gradient(90deg, ${T.green}, ${T.blue})`,
-                  width: `${timer.total ? (timer.left / timer.total) * 100 : 0}%`,
-                }} />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
-                {[
-                  { sec: 60, label: "1:00" },
-                  { sec: 90, label: "1:30" },
-                  { sec: 180, label: "3:00" },
-                  { sec: 300, label: "5:00" },
-                ].map((p) => (
-                  <button key={p.sec} onClick={() => startTimer(p.sec)}
-                    style={{
-                      padding: "10px 0", borderRadius: 10, fontFamily: T.num, fontSize: 15,
-                      border: `1.5px solid ${timer.total === p.sec ? T.green : T.line}`,
-                      background: T.surface2, color: timer.total === p.sec ? T.green : T.ink,
-                    }}>
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
-                {timer.running ? (
-                  <button onClick={pauseTimer}
-                    style={{ padding: "11px", borderRadius: 10, border: "none", background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                    ⏸ 一時停止
-                  </button>
-                ) : (
-                  <button onClick={resumeTimer} disabled={timer.left === 0 || timer.left === timer.total}
-                    style={{
-                      padding: "11px", borderRadius: 10, border: "none", fontWeight: 800, fontFamily: T.body, fontSize: 14,
-                      background: T.surface2, color: timer.left === 0 || timer.left === timer.total ? "#555C6E" : T.green,
-                    }}>
-                    ▶ 再開
-                  </button>
-                )}
-                <button onClick={resetTimer}
-                  style={{ padding: "11px", borderRadius: 10, border: "none", background: T.surface2, color: T.sub, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                  ↺ リセット
-                </button>
-              </div>
-              <p style={{ margin: "10px 0 0", fontSize: 11, color: T.sub }}>
-                HPSの目安: 筋肥大60〜90秒 ／ パワー3分（爆発的挙上）／ 筋力5分
-              </p>
-            </section>
 
             {grouped.length === 0 ? (
               <section style={{ ...cardStyle, textAlign: "center", color: T.sub }}>
@@ -1271,14 +1288,35 @@ export default function App() {
                         <span style={{ color: d.interval.includes("爆発") ? t.color : T.sub, fontWeight: 700 }}>{d.interval}</span>
                       </div>
                       {(data.plan.bench > 0 || data.plan.squat > 0 || data.plan.dead > 0) && (
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0 0" }}>
-                          {[["ベンチ", data.plan.bench], ["スクワット", data.plan.squat], ["デッド", data.plan.dead]]
-                            .filter(([, v]) => v > 0).map(([n, v]) => (
-                              <span key={n} style={{ background: T.surface2, border: `1px solid ${T.line}`, borderRadius: 8, padding: "6px 10px", fontSize: 13, fontWeight: 700 }}>
-                                {n} <span style={{ fontFamily: T.num, fontSize: 15, color: t.color }}>{roundPlate(v * d.pct)}</span>kg
-                              </span>
-                            ))}
-                        </div>
+                        <>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0 0" }}>
+                            {[["ベンチ", "ベンチプレス", data.plan.bench], ["スクワット", "スクワット", data.plan.squat], ["デッド", "デッドリフト", data.plan.dead]]
+                              .filter(([, , v]) => v > 0).map(([n, full, v]) => {
+                                const kg = roundPlate(v * d.pct);
+                                const repsNum = parseInt(d.reps, 10);
+                                return (
+                                  <button key={n}
+                                    onClick={() => setPlanRecord({
+                                      exercise: full, weight: String(kg),
+                                      reps: Number.isNaN(repsNum) ? "" : String(repsNum),
+                                      sets: String(d.sets),
+                                      day: d.day, typeName: t.name, color: t.color,
+                                      menu: `${d.reps} × ${d.sets}セット`,
+                                    })}
+                                    style={{
+                                      background: T.surface2, border: `1px solid ${T.line}`, borderRadius: 8,
+                                      padding: "6px 10px", fontSize: 13, fontWeight: 700, fontFamily: T.body, color: T.ink,
+                                    }}>
+                                    {n} <span style={{ fontFamily: T.num, fontSize: 15, color: t.color }}>{kg}</span>kg
+                                    <span style={{ fontSize: 12, marginLeft: 4 }}>📝</span>
+                                  </button>
+                                );
+                              })}
+                          </div>
+                          <p style={{ margin: "8px 0 0", fontSize: 11, color: T.sub }}>
+                            👆 重量をタップすると、その場で実績を記録できます
+                          </p>
+                        </>
                       )}
                       <p style={{ margin: "10px 0 0", fontSize: 12, background: T.surface2, padding: "8px 11px", borderRadius: 8, color: T.sub }}>💡 {t.tip}</p>
                     </section>
@@ -1579,6 +1617,65 @@ export default function App() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 計画タブからのクイック記録フォーム */}
+      {planRecord && (
+        <div onClick={() => setPlanRecord(null)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(10,11,15,0.75)", zIndex: 60,
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+          }}>
+          <div role="dialog" aria-label="実績の記録" onClick={(e) => e.stopPropagation()}
+            style={{ ...cardStyle, width: "100%", maxWidth: 340, animation: "popIn 0.25s ease-out", borderLeft: `5px solid ${planRecord.color}` }}>
+            <h3 style={{ ...h2Style, fontSize: 16 }}>📝 {planRecord.exercise} を記録</h3>
+            <p style={{ fontSize: 12, color: T.sub, margin: "8px 0 12px" }}>
+              {planRecord.day}（{planRecord.typeName}）のメニュー：<strong style={{ color: planRecord.color }}>{planRecord.menu}</strong>
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+              {[
+                { k: "weight", ph: "kg", label: "重量" },
+                { k: "reps", ph: "回", label: "レップ" },
+                { k: "sets", ph: "セット", label: "セット" },
+              ].map((f) => (
+                <div key={f.k}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: T.sub, letterSpacing: 1 }}>{f.label}</label>
+                  <input type="number" inputMode="decimal" min="0" style={inputStyle} placeholder={f.ph}
+                    value={planRecord[f.k]} onChange={(e) => setPlanRecord({ ...planRecord, [f.k]: e.target.value })} />
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 11, color: T.sub, margin: "10px 0 0", lineHeight: 1.6 }}>
+              {planRecord.menu.includes("限界")
+                ? "「限界まで」の日は、実際にこなせた回数をレップに入力してください。"
+                : "計画の推奨値を入れてあります。実際の重量・回数に合わせて調整してください。"}
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 14 }}>
+              <button onClick={() => setPlanRecord(null)}
+                style={{ padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
+                キャンセル
+              </button>
+              <button onClick={savePlanRecord}
+                disabled={!planRecord.weight || !planRecord.reps || !planRecord.sets}
+                style={{ ...primaryBtn(!planRecord.weight || !planRecord.reps || !planRecord.sets), padding: "12px", fontSize: 14, borderRadius: 10 }}>
+                記録する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 計画からの記録完了トースト */}
+      {planSavedMsg && (
+        <div style={{
+          position: "fixed", top: 80, left: "50%", transform: "translateX(-50%)",
+          zIndex: 55, animation: "popIn 0.3s ease-out",
+          background: T.green, color: "#0D0F13", fontWeight: 900, fontSize: 14,
+          padding: "13px 22px", borderRadius: 14, boxShadow: "0 6px 20px rgba(61,220,151,0.4)",
+          whiteSpace: "nowrap",
+        }}>
+          ✅ 記録しました！「記録」タブで確認できます
         </div>
       )}
 
