@@ -87,12 +87,12 @@ const CHARA_QUOTES = [
 
 // ============ デザイントークン ============
 const T = {
-  bg: "#12141A",
-  surface: "#1C1F27",
-  surface2: "#242834",
-  line: "#2E3341",
-  ink: "#EDEFF3",
-  sub: "#9AA3B5",
+  bg: "#0C0E14",
+  surface: "#171920",
+  surface2: "#21232B",
+  line: "#2B2E38",
+  ink: "#E9EAEF",
+  sub: "#A6A8B2",
   red: "#FF5A3C",
   yellow: "#FFC93C",
   green: "#3DDC97",
@@ -762,20 +762,23 @@ export default function App() {
   }
 
   const tabs = [
-    { id: "log", label: "記録", icon: "📝" },
-    { id: "chara", label: "進化", icon: "💪" },
-    { id: "truck", label: isHeli ? "ヘリ" : "軽トラ", icon: isHeli ? "🚁" : "🛻" },
-    { id: "plan", label: "計画", icon: "📋" },
-    { id: "goal", label: "目標", icon: "🏆" },
-    { id: "settings", label: "設定", icon: "⚙️" },
+    { id: "log", label: "記録", icon: "edit_note" },
+    { id: "chara", label: "進化", icon: "exercise" },
+    { id: "truck", label: isHeli ? "ヘリ" : "軽トラ", icon: isHeli ? "helicopter" : "local_shipping" },
+    { id: "plan", label: "計画", icon: "calendar_month" },
+    { id: "goal", label: "目標", icon: "trophy" },
+    { id: "settings", label: "設定", icon: "settings" },
   ];
 
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: T.body, color: T.ink, paddingBottom: 92 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Anton&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0..1,0&icon_names=calendar_month,edit_note,exercise,helicopter,local_shipping,settings,trophy&display=block');
         /* Viteテンプレートやブラウザ標準の余白・背景を打ち消す（スマホの白枠対策） */
-        html, body { margin: 0 !important; padding: 0 !important; background: #12141A !important; }
+        html, body { margin: 0 !important; padding: 0 !important; background: #0C0E14 !important; }
+        .msym { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr; -webkit-font-smoothing: antialiased; font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
+        .msym.on { font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24; }
         #root { max-width: none !important; margin: 0 !important; padding: 0 !important; text-align: initial !important; }
         @keyframes popIn { 0% { transform: scale(0.3) rotate(-8deg); opacity: 0; } 70% { transform: scale(1.1) rotate(2deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
         @keyframes shake { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-2.5deg); } 75% { transform: rotate(2.5deg); } }
@@ -783,13 +786,13 @@ export default function App() {
         @keyframes fadeUp { 0% { opacity: 0; transform: translateY(14px); } 100% { opacity: 1; transform: translateY(0); } }
         button { cursor: pointer; }
         input:focus, select:focus { border-color: #FF5A3C !important; }
-        select option { background: #242834; color: #EDEFF3; }
+        select option { background: #21232B; color: #E9EAEF; }
         @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
       `}</style>
 
       {/* ヘッダー */}
       <header style={{
-        background: `linear-gradient(180deg, #1C1F27, #16181F)`,
+        background: `linear-gradient(180deg, #171920, #0F1118)`,
         padding: "16px 16px 12px", borderBottom: `1px solid ${T.line}`,
         position: "sticky", top: 0, zIndex: 30,
       }}>
@@ -1741,22 +1744,34 @@ export default function App() {
       {/* ボトムナビ */}
       <nav style={{
         position: "fixed", bottom: 0, left: 0, right: 0,
-        background: "rgba(22,24,31,0.96)", backdropFilter: "blur(8px)",
+        background: "rgba(14,16,22,0.92)", backdropFilter: "blur(12px)",
         borderTop: `1px solid ${T.line}`, display: "flex", justifyContent: "space-around",
         padding: "8px 0 12px", zIndex: 40,
       }}>
-        {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            style={{
-              border: "none", background: "none", display: "flex", flexDirection: "column",
-              alignItems: "center", gap: 3, fontFamily: T.body, fontWeight: 800,
-              fontSize: 11, color: tab === t.id ? T.red : "#6B7386", padding: "4px 10px",
-              borderTop: tab === t.id ? `2px solid ${T.red}` : "2px solid transparent",
-            }}>
-            <span style={{ fontSize: 19, filter: tab === t.id ? "none" : "grayscale(1) opacity(0.6)" }}>{t.icon}</span>
-            {t.label}
-          </button>
-        ))}
+        {tabs.map((t) => {
+          const active = tab === t.id;
+          return (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              style={{
+                border: "none", background: "none", display: "flex", flexDirection: "column",
+                alignItems: "center", gap: 4, fontFamily: T.body, fontWeight: 800,
+                fontSize: 10.5, letterSpacing: 0.3, color: active ? T.red : "#6B7386", padding: "2px 6px",
+              }}>
+              <span style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: 46, height: 26, borderRadius: 999,
+                background: active ? "rgba(255,90,60,0.15)" : "transparent",
+                transition: "background 0.22s ease",
+              }}>
+                <span className={active ? "msym on" : "msym"}
+                  style={{ fontSize: 22, color: active ? T.red : "#6B7386", transition: "color 0.22s ease" }}>
+                  {t.icon}
+                </span>
+              </span>
+              {t.label}
+            </button>
+          );
+        })}
       </nav>
     </div>
   );
