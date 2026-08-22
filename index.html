@@ -16,9 +16,133 @@
       gtag('js', new Date());
       gtag('config', 'G-WW13P5WYT8');
     </script>
+    <!-- トップ紹介コンテンツ（#intro）専用スタイル。セレクタは全て #intro 配下に限定し、Reactアプリ側と競合させない -->
+    <style>
+      #intro{--i-bg:#0B0A0C;--i-panel:#15141A;--i-panel2:#1E1C24;--i-line:#332F3C;--i-ink:#F4EFE4;--i-sub:#A09AAA;--i-faint:#6B6575;--i-red:#E4482A;--i-gold:#E8C33A;
+        background:radial-gradient(120% 60% at 50% 0%,#16141B 0%,#0B0A0C 60%);color:var(--i-ink);
+        font-family:'Zen Kaku Gothic New','Hiragino Sans','Yu Gothic',sans-serif;line-height:1.9;font-size:15px;
+        border-bottom:2px solid var(--i-line);}
+      #intro *{box-sizing:border-box;}
+      #intro .i-wrap{max-width:720px;margin:0 auto;padding:26px 16px 30px;}
+      #intro .i-hero{text-align:center;padding:8px 0 4px;}
+      #intro .i-badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:2px;color:#1A1408;background:var(--i-gold);padding:4px 11px;border-radius:6px;transform:rotate(-2deg);}
+      #intro h1{font-size:25px;font-weight:900;letter-spacing:1px;line-height:1.4;margin:12px 0 6px;}
+      #intro h1 .i-mark{color:var(--i-red);}
+      #intro .i-lead{color:var(--i-sub);font-size:14px;margin:0 auto;max-width:560px;}
+      #intro h2{font-size:17px;font-weight:900;margin:0 0 12px;padding-left:11px;border-left:4px solid var(--i-red);}
+      #intro h3{font-size:14px;font-weight:800;color:var(--i-gold);margin:0 0 4px;}
+      #intro section{background:var(--i-panel);border:1px solid var(--i-line);border-radius:12px;padding:18px 18px;margin-top:14px;}
+      #intro p{margin:0 0 10px;}#intro p:last-child{margin-bottom:0;}
+      #intro .i-feats{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+      #intro .i-feat{background:var(--i-panel2);border:1px solid var(--i-line);border-radius:10px;padding:12px 13px;}
+      #intro .i-feat p{font-size:13px;color:var(--i-sub);margin:0;}
+      #intro .i-steps{margin:0;padding:0;list-style:none;counter-reset:step;}
+      #intro .i-steps li{position:relative;padding:2px 0 12px 40px;counter-increment:step;}
+      #intro .i-steps li:last-child{padding-bottom:0;}
+      #intro .i-steps li::before{content:counter(step);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:8px;background:var(--i-red);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;transform:rotate(-4deg);}
+      #intro .i-faq{margin-top:10px;}
+      #intro .i-faq:first-of-type{margin-top:0;}
+      #intro .i-faq p{font-size:13.5px;color:var(--i-sub);margin:2px 0 0;}
+      #intro a{color:var(--i-gold);}
+      #intro .i-links{display:flex;flex-wrap:wrap;gap:8px;}
+      #intro .i-links a{display:inline-block;background:var(--i-panel2);border:1px solid var(--i-line);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--i-ink);text-decoration:none;}
+      #intro .i-links a:hover{border-color:var(--i-red);}
+      #intro .i-cta{margin-top:18px;text-align:center;}
+      #intro .i-check{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:var(--i-sub);margin:0 0 12px;cursor:pointer;}
+      #intro .i-check input{width:17px;height:17px;accent-color:var(--i-red);}
+      #intro .i-start{display:inline-block;border:none;cursor:pointer;background:linear-gradient(180deg,#F05C3D,#B9331A);border-bottom:3px solid #7C1F0C;color:#fff;font-family:inherit;font-weight:900;font-size:15px;letter-spacing:1px;padding:14px 34px;border-radius:6px;box-shadow:0 4px 14px rgba(240,92,61,.34);}
+      #intro .i-start:active{transform:translateY(2px);border-bottom-width:1px;}
+      @media (max-width:520px){#intro .i-feats{grid-template-columns:1fr;}#intro h1{font-size:22px;}}
+    </style>
   </head>
   <body>
+    <!-- ===== トップ紹介コンテンツ（クローラー・審査に常に見える本文。利用者は「次回から表示しない」で非表示化可） ===== -->
+    <div id="intro">
+      <div class="i-wrap">
+        <div class="i-hero">
+          <span class="i-badge">MUSCLE EVOLUTION LOG</span>
+          <h1><span class="i-mark">筋トレ進化論</span> — 記録するとキャラが育つ<br />無料トレーニングログ</h1>
+          <p class="i-lead">その日のトレーニングを記録するだけで、あなたの分身キャラが少しずつ進化。持ち上げた総重量は「軽トラ何台分」に換算され、努力が目に見えて積み上がっていきます。登録不要・完全無料・データは端末内に保存。</p>
+        </div>
+
+        <section>
+          <h2>このアプリでできること</h2>
+          <div class="i-feats">
+            <div class="i-feat"><h3>トレーニング記録</h3><p>種目・重量・回数・セットを数タップで記録。自己ベスト更新は自動で検出して演出します。</p></div>
+            <div class="i-feat"><h3>キャラの進化・部位別成長</h3><p>鍛えた部位に応じてキャラの体型が変化。胸・肩・腕・背中・脚・腹筋の成長度をバーで可視化します。</p></div>
+            <div class="i-feat"><h3>総挙上量を軽トラ換算</h3><p>これまで持ち上げた合計重量を軽トラ（700kg）やヘリコプター（2t）の台数に換算し、積み上がる様子を表示します。</p></div>
+            <div class="i-feat"><h3>HPS 6週間プログラム</h3><p>BIG3の1RMを入れるだけで、筋肥大・パワー・筋力を組み合わせた6週間の推奨メニューを自動生成します。</p></div>
+            <div class="i-feat"><h3>インターバルタイマー</h3><p>セット間の休憩を管理。HPSの目安（筋肥大60〜90秒／パワー3分／筋力5分）にワンタップで対応します。</p></div>
+            <div class="i-feat"><h3>目標・称号／バックアップ</h3><p>2週間目標の達成で掛け声称号を獲得。データはJSONで書き出し・復元でき、機種変更時も安心です。</p></div>
+          </div>
+        </section>
+
+        <section>
+          <h2>HPS法とは</h2>
+          <p>HPS法は、<strong>H=筋肥大(Hypertrophy)・P=パワー(Power)・S=筋力(Strength)</strong> の3種類の刺激を1週間の中で使い分けるトレーニング法です。月曜は中重量で効かせて筋肉を大きく、水曜は高重量を爆発的に挙げて神経系を、金曜は高重量で最大筋力を伸ばします。</p>
+          <p>同じ刺激を続けると体が慣れて成長が停滞しがち。刺激を計画的に変えることで、サイズと筋力を同時に伸ばすことを狙います。本アプリはこの考え方に沿った6週間プログラムを自動で組み立てます。くわしくは <a href="/hps-method.html">HPS法の解説コラム</a> をご覧ください。</p>
+        </section>
+
+        <section>
+          <h2>使い方は3ステップ</h2>
+          <ol class="i-steps">
+            <li><strong>種目を選んで記録</strong>：今日おこなった種目・重量・回数・セットを入力して「記録する」。</li>
+            <li><strong>進化を確認</strong>：「進化」タブでキャラの体型と部位別の成長度をチェック。</li>
+            <li><strong>積み上げを実感</strong>：「軽トラ」タブで総挙上量の換算を眺めてモチベーションアップ。</li>
+          </ol>
+        </section>
+
+        <section>
+          <h2>料金・登録について</h2>
+          <p><strong>完全無料・登録不要</strong>で、すぐに使い始められます。記録データはサーバーではなく<strong>お使いの端末内（ブラウザ）</strong>に保存されるため、あなたのトレーニング内容が外部に送信されることはありません。端末を変えるときは、設定タブのバックアップ機能でデータを引き継げます。</p>
+        </section>
+
+        <section>
+          <h2>よくある質問</h2>
+          <div class="i-faq"><h3>Q. 本当に無料ですか？</h3><p>A. はい、すべての機能を無料でお使いいただけます。アカウント登録も不要です。</p></div>
+          <div class="i-faq"><h3>Q. データはどこに保存されますか？</h3><p>A. お使いの端末のブラウザ内に保存されます。ブラウザのデータを消去すると記録も消えるため、ときどきバックアップの書き出しをおすすめします。</p></div>
+          <div class="i-faq"><h3>Q. 筋トレ初心者でも使えますか？</h3><p>A. はい。基本種目のプリセットやBIG3入門コラムがあり、初めての方でも迷わず始められます。</p></div>
+          <div class="i-faq"><h3>Q. この説明をまた読みたいときは？</h3><p>A. いつでも <a href="/guide.html">使い方ガイド</a> から確認できます。</p></div>
+        </section>
+
+        <section>
+          <h2>関連ページ</h2>
+          <div class="i-links">
+            <a href="/guide.html">使い方ガイド</a>
+            <a href="/articles.html">コラム一覧</a>
+            <a href="/hps-method.html">HPS法とは</a>
+            <a href="/big3-basics.html">BIG3入門</a>
+            <a href="/privacy.html">プライバシーポリシー</a>
+            <a href="/contact.html">お問い合わせ</a>
+          </div>
+        </section>
+
+        <div class="i-cta">
+          <label class="i-check"><input type="checkbox" id="intro-hide-check" />次回から表示しない</label>
+          <button type="button" class="i-start" id="intro-start">アプリを始める ▼</button>
+        </div>
+      </div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- #intro の表示制御（Reactに依存しない素のJS。localStorageで「次回から表示しない」を保持） -->
+    <script>
+      (function () {
+        var KEY = 'kintore-intro-hidden';
+        var el = document.getElementById('intro');
+        if (!el) return;
+        // 再訪でフラグが立っていれば、描画前に非表示（チラつき防止）
+        try { if (localStorage.getItem(KEY) === '1') el.style.display = 'none'; } catch (e) {}
+        var btn = document.getElementById('intro-start');
+        var chk = document.getElementById('intro-hide-check');
+        if (btn) btn.addEventListener('click', function () {
+          try { if (chk && chk.checked) localStorage.setItem(KEY, '1'); } catch (e) {}
+          el.style.display = 'none';
+          window.scrollTo(0, 0);
+        });
+      })();
+    </script>
   </body>
 </html>
