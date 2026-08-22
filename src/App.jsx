@@ -5,59 +5,101 @@ const STORAGE_KEY = "kintore-shinkaron:data";
 const TRUCK_KG = 700; // 軽トラ1台の最大積載量の目安
 
 const STAGES = [
-  { days: 0, name: "ガリガリ", desc: "風で飛ばされそう…" },
-  { days: 3, name: "もやし卒業", desc: "何かが変わり始めた" },
-  { days: 7, name: "一般人", desc: "普通って素晴らしい" },
-  { days: 12, name: "引き締まりボディ", desc: "服の上からでも分かる" },
-  { days: 20, name: "細マッチョ", desc: "海に行きたくなってきた" },
-  { days: 30, name: "マッチョ", desc: "ドアを横向きで通り始めた" },
-  { days: 45, name: "ゴリマッチョ伝説", desc: "もはや歩く重機" },
+  { days: 0, name: { ja: "ガリガリ", en: "Skinny" }, desc: { ja: "風で飛ばされそう…", en: "Might blow away in the wind…" } },
+  { days: 3, name: { ja: "もやし卒業", en: "Beansprout No More" }, desc: { ja: "何かが変わり始めた", en: "Something's starting to change" } },
+  { days: 7, name: { ja: "一般人", en: "Regular Person" }, desc: { ja: "普通って素晴らしい", en: "Average is beautiful" } },
+  { days: 12, name: { ja: "引き締まりボディ", en: "Toned Body" }, desc: { ja: "服の上からでも分かる", en: "Visible even through clothes" } },
+  { days: 20, name: { ja: "細マッチョ", en: "Lean & Ripped" }, desc: { ja: "海に行きたくなってきた", en: "Feeling like hitting the beach" } },
+  { days: 30, name: { ja: "マッチョ", en: "Muscular" }, desc: { ja: "ドアを横向きで通り始めた", en: "Turning sideways through doorways" } },
+  { days: 45, name: { ja: "ゴリマッチョ伝説", en: "Legendary Beast" }, desc: { ja: "もはや歩く重機", en: "Basically walking heavy machinery" } },
 ];
 
-const SHOUT_TITLES = [
-  "肩にちっちゃい重機乗せてんのかい！",
-  "キレてる！キレてるよ！",
-  "背中に鬼が宿ってる！",
-  "腹筋6LDKかい！",
-  "大胸筋が歩いてる！",
-  "冷蔵庫かと思ったら大胸筋！",
-  "そこで会ったが百年目、ナイスバルク！",
-  "ケツがデカすぎて日陰ができてるよ！",
-  "土台が違う、土台が！",
-  "仕上がってるよ！仕上がってる！",
-  "腕が太すぎて空気も逃げ出す！",
-  "デカイよ！他が見えない！",
-  "筋肉のカーテンコールだ！",
-  "背中でクリスマスツリー育ててんのかい！",
-  "二頭筋が自慢の腕時計だ！",
-  "三角筋が尖りすぎて危ない！",
-  "脚が太すぎてジーンズが泣いてる！",
-  "広背筋が翼みたいだ！",
-  "腹斜筋が迷路になってる！",
-  "僧帽筋がマウント富士だ！",
-  "前腕が太すぎて握手できない！",
-  "ラットがV字すぎて羨ましい！",
-  "スクワットの賜物、最高だ！",
-  "ベンチプレスの化身が来た！",
-  "デッドリフトで地面が震えた！",
-  "プロテインより筋肉が濃い！",
-  "鏡に映るのは筋肉だけ！",
-  "限界突破の形が見える！",
-  "筋肉が筋肉を呼んでる！",
-];
+// 掛け声称号（獲得時はjaを正準として保存し、表示はindex対応で言語切替）
+const SHOUT_TITLES = {
+  ja: [
+    "肩にちっちゃい重機乗せてんのかい！",
+    "キレてる！キレてるよ！",
+    "背中に鬼が宿ってる！",
+    "腹筋6LDKかい！",
+    "大胸筋が歩いてる！",
+    "冷蔵庫かと思ったら大胸筋！",
+    "そこで会ったが百年目、ナイスバルク！",
+    "ケツがデカすぎて日陰ができてるよ！",
+    "土台が違う、土台が！",
+    "仕上がってるよ！仕上がってる！",
+    "腕が太すぎて空気も逃げ出す！",
+    "デカイよ！他が見えない！",
+    "筋肉のカーテンコールだ！",
+    "背中でクリスマスツリー育ててんのかい！",
+    "二頭筋が自慢の腕時計だ！",
+    "三角筋が尖りすぎて危ない！",
+    "脚が太すぎてジーンズが泣いてる！",
+    "広背筋が翼みたいだ！",
+    "腹斜筋が迷路になってる！",
+    "僧帽筋がマウント富士だ！",
+    "前腕が太すぎて握手できない！",
+    "ラットがV字すぎて羨ましい！",
+    "スクワットの賜物、最高だ！",
+    "ベンチプレスの化身が来た！",
+    "デッドリフトで地面が震えた！",
+    "プロテインより筋肉が濃い！",
+    "鏡に映るのは筋肉だけ！",
+    "限界突破の形が見える！",
+    "筋肉が筋肉を呼んでる！",
+  ],
+  en: [
+    "Are those tiny bulldozers on your shoulders?!",
+    "You're shredded! So shredded!",
+    "There's a demon living in your back!",
+    "Those abs have six spacious rooms!",
+    "Your pecs are walking on their own!",
+    "Thought it was a fridge—turns out it's your chest!",
+    "Caught you at last—nice bulk!",
+    "Your glutes are casting a shadow!",
+    "The foundation is different—the foundation!",
+    "You're peaked! Absolutely peaked!",
+    "Arms so huge the air runs away!",
+    "So big I can't see anything else!",
+    "It's a curtain call of muscle!",
+    "Growing a Christmas tree on your back?!",
+    "Your biceps are the finest wristwatch!",
+    "Those delts are dangerously sharp!",
+    "Legs so thick your jeans are crying!",
+    "Your lats are like wings!",
+    "Your obliques are a maze!",
+    "Your traps are Mount Fuji!",
+    "Forearms too thick to shake hands!",
+    "That V-taper is enviable!",
+    "A gift of the squat—magnificent!",
+    "The incarnation of the bench press has arrived!",
+    "The ground shook from your deadlift!",
+    "Denser than protein itself!",
+    "All the mirror shows is muscle!",
+    "I can see you breaking your limits!",
+    "Muscle is calling to muscle!",
+  ],
+};
 
+// 種目プリセット（keyを正準値としてログに保存、表示ラベルのみ言語切替）
 const EXERCISE_PRESETS = [
-  "ベンチプレス", "スクワット", "デッドリフト", "ショルダープレス",
-  "ラットプルダウン", "アームカール", "レッグプレス", "懸垂", "腹筋",
+  { key: "ベンチプレス", ja: "ベンチプレス", en: "Bench Press" },
+  { key: "スクワット", ja: "スクワット", en: "Squat" },
+  { key: "デッドリフト", ja: "デッドリフト", en: "Deadlift" },
+  { key: "ショルダープレス", ja: "ショルダープレス", en: "Shoulder Press" },
+  { key: "ラットプルダウン", ja: "ラットプルダウン", en: "Lat Pulldown" },
+  { key: "アームカール", ja: "アームカール", en: "Arm Curl" },
+  { key: "レッグプレス", ja: "レッグプレス", en: "Leg Press" },
+  { key: "懸垂", ja: "懸垂", en: "Pull-up" },
+  { key: "腹筋", ja: "腹筋", en: "Ab Crunch" },
 ];
 
 const HELI_KG = 2000; // ヘリコプター1機の重量目安（2t）
 
 // HPS 6週間プログラム（月:H 筋肥大 / 水:P パワー / 金:S 筋力）
 const DAY_TYPES = {
-  H: { key: "H", name: "筋肥大", color: "#F05C3D", tip: "重量より「効かせる」意識。ネガティブ動作をゆっくり。" },
-  P: { key: "P", name: "パワー", color: "#3DC98B", tip: "全力スピードで爆発的に挙げる。潰れる手前で必ず止める。" },
-  S: { key: "S", name: "筋力", color: "#5B9BFF", tip: "高重量ゾーン。ウォームアップとセーフティバーを忘れずに。" },
+  H: { key: "H", name: { ja: "筋肥大", en: "Hypertrophy" }, color: "#F05C3D", tip: { ja: "重量より「効かせる」意識。ネガティブ動作をゆっくり。", en: "Focus on feeling the muscle over lifting heavy. Lower slowly on the negative." } },
+  P: { key: "P", name: { ja: "パワー", en: "Power" }, color: "#3DC98B", tip: { ja: "全力スピードで爆発的に挙げる。潰れる手前で必ず止める。", en: "Lift explosively at full speed. Always stop just before failure." } },
+  S: { key: "S", name: { ja: "筋力", en: "Strength" }, color: "#5B9BFF", tip: { ja: "高重量ゾーン。ウォームアップとセーフティバーを忘れずに。", en: "Heavy-weight zone. Don't skip warm-ups and safety bars." } },
 };
 const HPS_PROGRAM = [
   { week: 1, days: [
@@ -93,12 +135,20 @@ const HPS_PROGRAM = [
 ];
 
 // キャラのひとことセリフ
-const CHARA_QUOTES = [
-  "ナイスバルク！！！", "イエス筋肉！！！", "キレてる！キレてる！",
-  "パワーーーー！！", "筋肉は裏切らない！", "今日も追い込むぞ！",
-  "プロテインの時間だ！", "デカくなってる実感ある…！", "ハッ！（ポージング）",
-  "僧帽筋が喜んでる！", "超回復こそ正義！", "限界の1歩先へ！",
-];
+const CHARA_QUOTES = {
+  ja: [
+    "ナイスバルク！！！", "イエス筋肉！！！", "キレてる！キレてる！",
+    "パワーーーー！！", "筋肉は裏切らない！", "今日も追い込むぞ！",
+    "プロテインの時間だ！", "デカくなってる実感ある…！", "ハッ！（ポージング）",
+    "僧帽筋が喜んでる！", "超回復こそ正義！", "限界の1歩先へ！",
+  ],
+  en: [
+    "Nice bulk!!!", "Yes, muscle!!!", "Shredded! Shredded!",
+    "Powerrrr!!", "Muscle never betrays you!", "Let's crush it again today!",
+    "Protein time!", "I can feel myself getting bigger…!", "Hah! (posing)",
+    "My traps are happy!", "Supercompensation is justice!", "One step past the limit!",
+  ],
+};
 
 // ============ デザイントークン（重厚版：金属背景 ＋ 落下の衝撃） ============
 const T = {
@@ -175,16 +225,20 @@ async function storageSet(key, value) {
 
 // ============ 部位判定 ============
 const ALL_PARTS = ["chest", "shoulder", "arm", "back", "leg", "abs"];
-const PART_LABELS = { chest: "胸", shoulder: "肩", arm: "腕", back: "背中", leg: "脚", abs: "腹筋" };
+const PART_LABELS = {
+  ja: { chest: "胸", shoulder: "肩", arm: "腕", back: "背中", leg: "脚", abs: "腹筋" },
+  en: { chest: "Chest", shoulder: "Shoulders", arm: "Arms", back: "Back", leg: "Legs", abs: "Abs" },
+};
 const PART_COLORS = { chest: "#F05C3D", shoulder: "#E8C33A", arm: "#B478E6", back: "#5B9BFF", leg: "#3DC98B", abs: "#6FCEDC" };
+// 日本語・英語どちらの種目名でも部位を判定できるよう英語キーワードも追加（iフラグ）
 const PART_RULES = [
-  { re: /デッド/, parts: [["back", 0.5], ["leg", 0.5]] },
-  { re: /腹|クランチ|プランク|アブ|レッグレイズ/, parts: [["abs", 1]] },
-  { re: /ベンチ|チェスト|フライ|腕立て|プッシュアップ|胸/, parts: [["chest", 1]] },
-  { re: /ラット|プル|懸垂|チンニング|ロウ|背/, parts: [["back", 1]] },
-  { re: /ショルダー|レイズ|オーバーヘッド|肩/, parts: [["shoulder", 1]] },
-  { re: /スクワット|レッグ|ランジ|カーフ|脚|尻|ヒップ/, parts: [["leg", 1]] },
-  { re: /カール|二頭|三頭|トライセ|ディップ|プレスダウン|腕/, parts: [["arm", 1]] },
+  { re: /デッド|deadlift/i, parts: [["back", 0.5], ["leg", 0.5]] },
+  { re: /腹|クランチ|プランク|アブ|レッグレイズ|ab\s*crunch|crunch|plank|sit-?up|leg\s*raise/i, parts: [["abs", 1]] },
+  { re: /ベンチ|チェスト|フライ|腕立て|プッシュアップ|胸|bench|chest|fly|push-?up/i, parts: [["chest", 1]] },
+  { re: /ラット|プル|懸垂|チンニング|ロウ|背|lat|pulldown|pull-?up|chin-?up|row/i, parts: [["back", 1]] },
+  { re: /ショルダー|レイズ|オーバーヘッド|肩|shoulder|overhead|lateral\s*raise|delt/i, parts: [["shoulder", 1]] },
+  { re: /スクワット|レッグ|ランジ|カーフ|脚|尻|ヒップ|squat|leg\s*press|lunge|calf|glute|hip/i, parts: [["leg", 1]] },
+  { re: /カール|二頭|三頭|トライセ|ディップ|プレスダウン|腕|curl|bicep|tricep|dip|pushdown|arm/i, parts: [["arm", 1]] },
 ];
 function classifyExercise(name) {
   for (const r of PART_RULES) if (r.re.test(name)) return r.parts;
@@ -197,6 +251,184 @@ function partsOfLog(log) {
   }
   return classifyExercise(log.exercise);
 }
+
+// ============ 多言語（i18n） ============
+const LANGS = ["ja", "en"];
+const detectLang = () => {
+  try { return (navigator.language || "").toLowerCase().startsWith("ja") ? "ja" : "en"; }
+  catch { return "ja"; }
+};
+// プリセット種目の表示名（保存値keyは日本語のまま。表示のみ言語切替）
+const exName = (name, lang) => {
+  const p = EXERCISE_PRESETS.find((e) => e.key === name);
+  return p ? p[lang] : name; // マイ種目はユーザー入力のまま
+};
+// 称号（保存はja正準。表示のみ対応indexで切替、無ければ原文）
+const shoutText = (title, lang) => {
+  const i = SHOUT_TITLES.ja.indexOf(title);
+  return i >= 0 ? SHOUT_TITLES[lang][i] : title;
+};
+// HPSプログラムの曜日・回数・インターバル表示（保存値は日本語正準のまま）
+const DAY_NAME = { "月曜日": "Monday", "水曜日": "Wednesday", "金曜日": "Friday" };
+const hpsDay = (d, lang) => (lang === "en" ? (DAY_NAME[d] || d) : d);
+const hpsReps = (r, lang) => {
+  if (lang !== "en") return r;
+  if (r === "限界まで") return "To failure";
+  const m = r.match(/^(\d+)回$/);
+  if (m) return `${m[1]} ${m[1] === "1" ? "rep" : "reps"}`;
+  return r;
+};
+const hpsInterval = (v, lang) => {
+  if (lang !== "en") return v;
+  if (v === "爆発的挙上・3分") return "Explosive · 3 min";
+  const m = v.match(/^(\d+)分$/);
+  if (m) return `${m[1]} min`;
+  return v;
+};
+const isFailureDay = (r) => r === "限界まで";
+
+const TXT = {
+  ja: {
+    loading: "読み込み中…💪",
+    tabLog: "記録", tabChara: "進化", tabTruck: "軽トラ", tabHeli: "ヘリ", tabPlan: "計画", tabGoal: "目標", tabSettings: "設定",
+    langLabel: "言語 / Language",
+    // 記録
+    streak: "ストリーク", streakUnit: "回連続", streakNote: "中2日以内なら継続",
+    thisWeek: "今週", dayUnit: "日", weekNote: "月曜はじまり",
+    intervalTimer: "インターバルタイマー", pause: "⏸ 一時停止", resume: "▶ 再開", reset: "↺ リセット",
+    timerHint: "HPSの目安: 筋肥大60〜90秒 ／ パワー3分（爆発的挙上）／ 筋力5分",
+    recordTitle: "今日のトレーニングを記録",
+    grpBasic: "基本種目", grpCustom: "マイ種目", addNewEx: "＋ 新しい種目を追加",
+    exNamePlaceholder: "種目名（例: インクラインベンチ）",
+    targetParts: "効かせる部位（複数選択できます）",
+    exDup: "同じ名前の種目がすでにあります",
+    addToMyEx: "この種目をマイ種目に追加",
+    addExNote: "追加した種目はこの端末だけに保存され、選んだ部位の成長に反映されます。",
+    fWeight: "重量", fReps: "レップ", fSets: "セット", phKg: "kg", phReps: "回", phSets: "セット",
+    recordBtn: "記録する",
+    myExTitle: "💪 マイ種目", myExNote: "削除しても、過去の記録とキャラの成長はそのまま残ります。",
+    emptyLogs1: "まだ記録がありません。", emptyLogs2: "最初の1セットが進化の始まりです。",
+    uKg: "kg", uReps: "回", uSets: "セット", delAria: "削除", delMyExAria: "マイ種目を削除",
+    // 進化
+    tapToSpeak: "👆 タップすると喋ります",
+    trainingDays: "トレーニング日数",
+    growthTitle: "部位別の成長度",
+    growthNote: "記録した種目の部位だけが育ちます。偏るとキャラも偏った体型に…！",
+    titlesTitle: "獲得した称号（掛け声コレクション）",
+    noTitles: "まだ称号がありません。「目標」タブで2週間目標を達成すると、大会の掛け声がもらえます！",
+    // 軽トラ
+    upBanner1: "軽トラ100台を制覇！", upBanner2: "次のステージ「ヘリコプター（2t/機）」に挑戦できます。",
+    change: "変更する",
+    volTruck: "総挙上量", volHeli: "ヘリ換算の挙上量",
+    vNameTruck: "軽トラ", vNameHeli: "ヘリコプター", vUnitTruck: "台", vUnitHeli: "機",
+    vSpecTruck: `最大積載${TRUCK_KG}kg`, vSpecHeli: `${HELI_KG / 1000}t/機`,
+    nextTruck: "次の1台まで", nextHeli: "次の1機まで",
+    pileTruck: "積み上げた軽トラの山", pileHeli: "積み上げたヘリの山",
+    // 計画
+    planTitle: "HPS 6週間プログラム",
+    rmBench: "ベンチ", rmSquat: "スクワット", rmDead: "デッド", rm1: "1RM",
+    makePlan: "6週間の計画を作る", remakePlan: "計画を作り直す",
+    weightTapHint: "👆 重量をタップすると、その場で実績を記録できます",
+    planFootnote: "※ 週が進むほど水曜・金曜の強度が上がります。体調に合わせて重量は無理なく調整し、フォームが崩れたらその日は終了してください。",
+    setsUnit: "セット",
+    // 目標
+    setGoalTitle: "2週間目標を立てる",
+    goalStart: "目標スタート", activeGoal: "挑戦中の目標",
+    finishGoal: "この期間を締めて、次の目標へ", pastGoals: "過去の挑戦",
+    achievedTag: "達成 🏆", failedTag: "未達",
+    // 設定
+    backupTitle: "データのバックアップ",
+    backupIntro1: "記録はこの端末のブラウザ内だけに保存されています。機種変更やブラウザのデータ消去で消えるため、",
+    backupIntro2: "ときどき書き出して保管", backupIntro3: "しておくと安心です。別の端末へ引き継ぐときもこのファイルを使います。",
+    exportBtn: "⬇ バックアップを書き出す（JSON）", importBtn: "⬆ バックアップから復元する",
+    ioExportOk: "バックアップを書き出しました。", ioExportErr: "書き出しに失敗しました。",
+    ioImportErr: "読み込めませんでした。正しいバックアップファイルか確認してください。",
+    ioReadErr: "ファイルの読み込みに失敗しました。", ioRestored: "データを復元しました。",
+    currentData: "現在のデータ",
+    dLogs: "記録件数", dDays: "トレーニング日数", dMyEx: "マイ種目", dTitles: "獲得した称号", dGoals: "過去の目標挑戦",
+    uItems: "件", uCount: "個", uTimes: "回",
+    restoreWarn1: "※ 復元すると今の記録はファイルの内容で", restoreWarn2: "すべて置き換わります", restoreWarn3: "。大事な記録がある場合は、先にバックアップを書き出しておくことをおすすめします。",
+    // フッター
+    fGuide: "使い方ガイド", fColumns: "コラム", fContact: "お問い合わせ", fPrivacy: "プライバシーポリシー",
+    // ダイアログ／トースト
+    prTitle: "自己ベスト更新！！", tapClose: "タップして閉じる",
+    timerDone: "🔔 インターバル終了！次のセット！",
+    upTitle: "🚁 ヘリコプターに変更しますか？", cancel: "キャンセル",
+    importTitle: "このデータで復元しますか？",
+    iRecords: "記録件数", iTitles: "称号", iGoals: "目標履歴", restoreBtn: "復元する",
+    delTitle: "この記録を削除しますか？", delIrreversible: "削除すると元に戻せません。", delBtn: "削除する",
+    planSavedToast: "✅ 記録しました！「記録」タブで確認できます",
+    delExTitle: "このマイ種目を削除しますか？",
+    delExNote: "種目の選択肢から消えるだけで、この種目で記録したトレーニングとキャラの成長は残ります。",
+    celebTitle: "🏆 目標達成！称号獲得 🏆",
+  },
+  en: {
+    loading: "Loading…💪",
+    tabLog: "Record", tabChara: "Evolve", tabTruck: "Trucks", tabHeli: "Heli", tabPlan: "Plan", tabGoal: "Goal", tabSettings: "Settings",
+    langLabel: "言語 / Language",
+    streak: "Streak", streakUnit: "in a row", streakNote: "Continues within a 3-day gap",
+    thisWeek: "This Week", dayUnit: "days", weekNote: "Starts Monday",
+    intervalTimer: "Interval Timer", pause: "⏸ Pause", resume: "▶ Resume", reset: "↺ Reset",
+    timerHint: "HPS guide: Hypertrophy 60–90s / Power 3 min (explosive) / Strength 5 min",
+    recordTitle: "Log today's workout",
+    grpBasic: "Basic exercises", grpCustom: "My exercises", addNewEx: "＋ Add a new exercise",
+    exNamePlaceholder: "Exercise name (e.g. Incline Bench)",
+    targetParts: "Target muscles (select multiple)",
+    exDup: "An exercise with that name already exists",
+    addToMyEx: "Add to My Exercises",
+    addExNote: "Added exercises are saved on this device only and count toward the selected muscles' growth.",
+    fWeight: "Weight", fReps: "Reps", fSets: "Sets", phKg: "kg", phReps: "reps", phSets: "sets",
+    recordBtn: "Record",
+    myExTitle: "💪 My Exercises", myExNote: "Deleting one keeps your past logs and character growth intact.",
+    emptyLogs1: "No logs yet.", emptyLogs2: "Your first set is the start of your evolution.",
+    uKg: "kg", uReps: " reps", uSets: " sets", delAria: "Delete", delMyExAria: "Delete my exercise",
+    tapToSpeak: "👆 Tap to make it speak",
+    trainingDays: "Training days",
+    growthTitle: "Muscle growth by area",
+    growthNote: "Only the muscles you train grow. Skew your training and your character gets lopsided…!",
+    titlesTitle: "Titles earned (cheer collection)",
+    noTitles: "No titles yet. Clear a 2-week goal in the Goal tab to earn a contest cheer!",
+    upBanner1: "100 kei trucks conquered!", upBanner2: "Unlock the next stage: Helicopter (2t each).",
+    change: "Upgrade",
+    volTruck: "TOTAL LIFTED VOLUME", volHeli: "HELI-CONVERTED VOLUME",
+    vNameTruck: "kei truck", vNameHeli: "helicopter", vUnitTruck: "", vUnitHeli: "",
+    vSpecTruck: `max load ${TRUCK_KG}kg`, vSpecHeli: `${HELI_KG / 1000}t each`,
+    nextTruck: "To next truck", nextHeli: "To next chopper",
+    pileTruck: "Your tower of kei trucks", pileHeli: "Your fleet of helicopters",
+    planTitle: "HPS 6-Week Program",
+    rmBench: "Bench", rmSquat: "Squat", rmDead: "Deadlift", rm1: "1RM",
+    makePlan: "Create 6-week plan", remakePlan: "Rebuild plan",
+    weightTapHint: "👆 Tap a weight to log your actual set on the spot",
+    planFootnote: "* Wednesday and Friday intensity rises as the weeks progress. Adjust weights to how you feel, and stop for the day if your form breaks down.",
+    setsUnit: "sets",
+    setGoalTitle: "Set a 2-week goal",
+    goalStart: "Start goal", activeGoal: "Active goal",
+    finishGoal: "Close this period and start the next goal", pastGoals: "Past challenges",
+    achievedTag: "Achieved 🏆", failedTag: "Missed",
+    backupTitle: "Data backup",
+    backupIntro1: "Your logs are stored only in this device's browser. They can be lost when you change devices or clear browser data, so ",
+    backupIntro2: "export and keep a copy now and then", backupIntro3: ". Use this file to move your data to another device too.",
+    exportBtn: "⬇ Export backup (JSON)", importBtn: "⬆ Restore from backup",
+    ioExportOk: "Backup exported.", ioExportErr: "Export failed.",
+    ioImportErr: "Couldn't read the file. Please make sure it's a valid backup.",
+    ioReadErr: "Failed to read the file.", ioRestored: "Data restored.",
+    currentData: "Current data",
+    dLogs: "Logs", dDays: "Training days", dMyEx: "My exercises", dTitles: "Titles earned", dGoals: "Past goal attempts",
+    uItems: "", uCount: "", uTimes: "",
+    restoreWarn1: "* Restoring will ", restoreWarn2: "replace all your current logs", restoreWarn3: " with the file's contents. If you have important logs, export a backup first.",
+    fGuide: "Guide", fColumns: "Columns", fContact: "Contact", fPrivacy: "Privacy Policy",
+    prTitle: "New personal best!!", tapClose: "Tap to close",
+    timerDone: "🔔 Rest over! Next set!",
+    upTitle: "🚁 Upgrade to a helicopter?", cancel: "Cancel",
+    importTitle: "Restore with this data?",
+    iRecords: "Logs", iTitles: "Titles", iGoals: "Goal history", restoreBtn: "Restore",
+    delTitle: "Delete this log?", delIrreversible: "This can't be undone.", delBtn: "Delete",
+    planSavedToast: "✅ Logged! Check it in the Record tab.",
+    delExTitle: "Delete this exercise?",
+    delExNote: "It's only removed from the picker—the workouts you logged with it and your character growth remain.",
+    celebTitle: "🏆 Goal cleared! Title earned 🏆",
+  },
+};
 
 // ============ キャラクターSVG（部位別成長・自然な筋肥大） ============
 const midPt = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
@@ -456,7 +688,7 @@ const primaryBtn = (disabled) => ({
 export default function App() {
   const [tab, setTab] = useState("log");
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState({ logs: [], goal: null, titles: [], goalHistory: [], plan: null, vehicle: { type: "truck", resetBase: 0 }, customExercises: [] });
+  const [data, setData] = useState({ logs: [], goal: null, titles: [], goalHistory: [], plan: null, vehicle: { type: "truck", resetBase: 0 }, customExercises: [], lang: detectLang() });
   const [celebration, setCelebration] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [ioMsg, setIoMsg] = useState(null); // { type: "ok"|"err", text }
@@ -496,6 +728,7 @@ export default function App() {
             plan: d.plan ?? null,
             vehicle: d.vehicle || { type: "truck", resetBase: 0 },
             customExercises: d.customExercises || [],
+            lang: LANGS.includes(d.lang) ? d.lang : detectLang(),
           });
           if (d.plan) setRm({ bench: String(d.plan.bench || ""), squat: String(d.plan.squat || ""), dead: String(d.plan.dead || "") });
         } catch (e) { console.error("データの読み込みに失敗", e); }
@@ -529,9 +762,9 @@ export default function App() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      setIoMsg({ type: "ok", text: "バックアップを書き出しました。" });
+      setIoMsg({ type: "ok", key: "ioExportOk" });
     } catch (e) {
-      setIoMsg({ type: "err", text: "書き出しに失敗しました。" });
+      setIoMsg({ type: "err", key: "ioExportErr" });
     }
   };
 
@@ -555,13 +788,14 @@ export default function App() {
           plan: d.plan ?? null,
           vehicle: d.vehicle || { type: "truck", resetBase: 0 },
           customExercises: Array.isArray(d.customExercises) ? d.customExercises : [],
+          lang: LANGS.includes(d.lang) ? d.lang : (data.lang || "ja"),
         };
         setImportPreview(clean);
       } catch (err) {
-        setIoMsg({ type: "err", text: "読み込めませんでした。正しいバックアップファイルか確認してください。" });
+        setIoMsg({ type: "err", key: "ioImportErr" });
       }
     };
-    reader.onerror = () => setIoMsg({ type: "err", text: "ファイルの読み込みに失敗しました。" });
+    reader.onerror = () => setIoMsg({ type: "err", key: "ioReadErr" });
     reader.readAsText(file);
   };
 
@@ -575,7 +809,7 @@ export default function App() {
       });
     }
     setImportPreview(null);
-    setIoMsg({ type: "ok", text: "データを復元しました。" });
+    setIoMsg({ type: "ok", key: "ioRestored" });
   };
 
   const uniqueDays = useMemo(() => new Set(data.logs.map((l) => l.date)).size, [data.logs]);
@@ -637,8 +871,8 @@ export default function App() {
     if (loading || !data.goal || data.goal.rewarded) return;
     if (goalDaysCount >= data.goal.target) {
       const owned = new Set(data.titles);
-      const pool = SHOUT_TITLES.filter((t) => !owned.has(t));
-      const title = pool.length ? pool[Math.floor(Math.random() * pool.length)] : SHOUT_TITLES[Math.floor(Math.random() * SHOUT_TITLES.length)];
+      const pool = SHOUT_TITLES.ja.filter((t) => !owned.has(t)); // 保存は日本語を正準に
+      const title = pool.length ? pool[Math.floor(Math.random() * pool.length)] : SHOUT_TITLES.ja[Math.floor(Math.random() * SHOUT_TITLES.ja.length)];
       save({
         ...data,
         titles: owned.has(title) ? data.titles : [...data.titles, title],
@@ -713,8 +947,8 @@ export default function App() {
   const addCustomExercise = () => {
     const name = customEx.trim();
     if (!name || newExParts.length === 0) return;
-    if (EXERCISE_PRESETS.includes(name) || data.customExercises.some((c) => c.name === name)) {
-      setExMsg("同じ名前の種目がすでにあります");
+    if (EXERCISE_PRESETS.some((e) => e.key === name) || data.customExercises.some((c) => c.name === name)) {
+      setExMsg(true);
       return;
     }
     // 部位バーの表示順で保存
@@ -727,7 +961,7 @@ export default function App() {
   const deleteCustomExercise = (id) => {
     const target = data.customExercises.find((c) => c.id === id);
     save({ ...data, customExercises: data.customExercises.filter((c) => c.id !== id) });
-    if (target && exercise === target.name) setExercise(EXERCISE_PRESETS[0]);
+    if (target && exercise === target.name) setExercise(EXERCISE_PRESETS[0].key);
   };
 
   const startGoal = () => {
@@ -758,11 +992,15 @@ export default function App() {
 
   // ---- キャラのひとこと ----
   const speak = () => {
-    const q = CHARA_QUOTES[Math.floor(Math.random() * CHARA_QUOTES.length)];
+    const arr = CHARA_QUOTES[data.lang] || CHARA_QUOTES.ja;
+    const q = arr[Math.floor(Math.random() * arr.length)];
     setBubble(q);
     if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
     bubbleTimer.current = setTimeout(() => setBubble(null), 2000);
   };
+
+  // ---- 言語切替 ----
+  const changeLang = (next) => { if (LANGS.includes(next)) save({ ...data, lang: next }); };
 
   // ---- 乗り物をヘリコプターへアップグレード ----
   const upgradeToHeli = () => {
@@ -826,21 +1064,24 @@ export default function App() {
     };
   }, [tab, truckCount]); // eslint-disable-line
 
+  const lang = data.lang || "ja";
+  const tx = TXT[lang];
+
   if (loading) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.pageGrad, color: T.sub, fontFamily: T.body }}>
-        <p>読み込み中…💪</p>
+        <p>{tx.loading}</p>
       </div>
     );
   }
 
   const tabs = [
-    { id: "log", label: "記録", icon: "edit_note" },
-    { id: "chara", label: "進化", icon: "exercise" },
-    { id: "truck", label: isHeli ? "ヘリ" : "軽トラ", icon: isHeli ? "helicopter" : "local_shipping" },
-    { id: "plan", label: "計画", icon: "calendar_month" },
-    { id: "goal", label: "目標", icon: "trophy" },
-    { id: "settings", label: "設定", icon: "settings" },
+    { id: "log", label: tx.tabLog, icon: "edit_note" },
+    { id: "chara", label: tx.tabChara, icon: "exercise" },
+    { id: "truck", label: isHeli ? tx.tabHeli : tx.tabTruck, icon: isHeli ? "helicopter" : "local_shipping" },
+    { id: "plan", label: tx.tabPlan, icon: "calendar_month" },
+    { id: "goal", label: tx.tabGoal, icon: "trophy" },
+    { id: "settings", label: tx.tabSettings, icon: "settings" },
   ];
 
   return (
@@ -889,12 +1130,24 @@ export default function App() {
               <p style={{ margin: "2px 0 0", fontFamily: T.num, fontSize: 10, letterSpacing: 3.5, color: T.sub2, lineHeight: 1 }}>MUSCLE EVOLUTION</p>
             </div>
           </div>
-          {/* 右：ステージバッジ（傾いた金スタンプ） */}
-          <span style={{
-            flex: "none", fontFamily: T.display, fontWeight: 400, fontSize: 11,
-            padding: "7px 10px", background: T.yellow, color: "#17140A",
-            transform: "rotate(2deg)", boxShadow: "2px 2px 0 #000", whiteSpace: "nowrap",
-          }}>{STAGES[stageIdx].name}</span>
+          {/* 右：言語トグル＋ステージバッジ（傾いた金スタンプ） */}
+          <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 8 }}>
+            <button onClick={() => changeLang(lang === "ja" ? "en" : "ja")}
+              aria-label={lang === "ja" ? "Switch to English" : "日本語に切り替え"}
+              style={{
+                flex: "none", border: `1px solid ${T.line2}`, background: T.surface2, color: T.ink,
+                fontFamily: T.cond, fontWeight: 700, fontSize: 11, letterSpacing: 1,
+                padding: "6px 9px", borderRadius: 4, whiteSpace: "nowrap", lineHeight: 1,
+                display: "flex", alignItems: "center", gap: 4,
+              }}>
+              <span style={{ fontSize: 12 }}>🌐</span>{lang === "ja" ? "EN" : "日本語"}
+            </button>
+            <span style={{
+              flex: "none", fontFamily: T.display, fontWeight: 400, fontSize: 11,
+              padding: "7px 10px", background: T.yellow, color: "#17140A",
+              transform: "rotate(2deg)", boxShadow: "2px 2px 0 #000", whiteSpace: "nowrap",
+            }}>{STAGES[stageIdx].name[lang]}</span>
+          </div>
         </div>
         {/* 掛け声ティッカー（獲得した称号だけが流れる。増えるほど賑やかに） */}
         {data.titles.length > 0 && (
@@ -903,7 +1156,7 @@ export default function App() {
               {[0, 1].map((k) => (
                 <span key={k} aria-hidden={k === 1}
                   style={{ fontFamily: T.num, fontSize: 12, letterSpacing: 2.5, color: "#FFF2E0", whiteSpace: "nowrap", paddingRight: 24 }}>
-                  {data.titles.map((s) => `★ ${s} `).join("")}
+                  {data.titles.map((s) => `★ ${shoutText(s, lang)} `).join("")}
                 </span>
               ))}
             </div>
@@ -918,27 +1171,27 @@ export default function App() {
             {/* ストリーク＆今週 */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <section style={{ ...cardStyle, padding: "12px 14px", textAlign: "center" }}>
-                <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><span className="msym" style={{ fontSize: 15, color: T.red }}>local_fire_department</span>ストリーク</p>
+                <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><span className="msym" style={{ fontSize: 15, color: T.red }}>local_fire_department</span>{tx.streak}</p>
                 <p style={{ margin: "2px 0 0" }}>
                   <span style={{ fontFamily: T.num, fontSize: 30, color: streak > 0 ? T.yellow : T.sub }}>{streak}</span>
-                  <span style={{ fontSize: 13, marginLeft: 3 }}>回連続</span>
+                  <span style={{ fontSize: 13, marginLeft: 3 }}>{tx.streakUnit}</span>
                 </p>
-                <p style={{ margin: "2px 0 0", fontSize: 10, color: T.sub }}>中2日以内なら継続</p>
+                <p style={{ margin: "2px 0 0", fontSize: 10, color: T.sub }}>{tx.streakNote}</p>
               </section>
               <section style={{ ...cardStyle, padding: "12px 14px", textAlign: "center" }}>
-                <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><span className="msym" style={{ fontSize: 15, color: T.blue }}>date_range</span>今週</p>
+                <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><span className="msym" style={{ fontSize: 15, color: T.blue }}>date_range</span>{tx.thisWeek}</p>
                 <p style={{ margin: "2px 0 0" }}>
                   <span style={{ fontFamily: T.num, fontSize: 30 }}>{weekCount}</span>
-                  <span style={{ fontSize: 13, marginLeft: 3 }}>日</span>
+                  <span style={{ fontSize: 13, marginLeft: 3 }}>{tx.dayUnit}</span>
                 </p>
-                <p style={{ margin: "2px 0 0", fontSize: 10, color: T.sub }}>月曜はじまり</p>
+                <p style={{ margin: "2px 0 0", fontSize: 10, color: T.sub }}>{tx.weekNote}</p>
               </section>
             </div>
 
             {/* インターバルタイマー */}
             <section style={{ ...cardStyle, borderLeft: timer.running ? `5px solid ${T.green}` : `5px solid ${T.line}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ ...h2Style, fontSize: 15, display: "flex", alignItems: "center", gap: 6 }}><span className="msym" style={{ fontSize: 19, color: T.green }}>timer</span>インターバルタイマー</h3>
+                <h3 style={{ ...h2Style, fontSize: 15, display: "flex", alignItems: "center", gap: 6 }}><span className="msym" style={{ fontSize: 19, color: T.green }}>timer</span>{tx.intervalTimer}</h3>
                 <span style={{
                   fontFamily: T.num, fontSize: 34, letterSpacing: 1,
                   color: timer.running ? T.green : timer.left === 0 ? T.red : T.ink,
@@ -974,7 +1227,7 @@ export default function App() {
                 {timer.running ? (
                   <button onClick={pauseTimer}
                     style={{ padding: "11px", borderRadius: 10, border: "none", background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                    ⏸ 一時停止
+                    {tx.pause}
                   </button>
                 ) : (
                   <button onClick={resumeTimer} disabled={timer.left === 0 || timer.left === timer.total}
@@ -982,39 +1235,39 @@ export default function App() {
                       padding: "11px", borderRadius: 10, border: "none", fontWeight: 800, fontFamily: T.body, fontSize: 14,
                       background: T.surface2, color: timer.left === 0 || timer.left === timer.total ? "#555C6E" : T.green,
                     }}>
-                    ▶ 再開
+                    {tx.resume}
                   </button>
                 )}
                 <button onClick={resetTimer}
                   style={{ padding: "11px", borderRadius: 10, border: "none", background: T.surface2, color: T.sub, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                  ↺ リセット
+                  {tx.reset}
                 </button>
               </div>
               <p style={{ margin: "10px 0 0", fontSize: 11, color: T.sub }}>
-                HPSの目安: 筋肥大60〜90秒 ／ パワー3分（爆発的挙上）／ 筋力5分
+                {tx.timerHint}
               </p>
             </section>
 
             <section style={cardStyle}>
-              <h2 style={{ ...h2Style, display: "flex", alignItems: "center", gap: 8 }}><span className="msym" style={{ fontSize: 20, color: T.red }}>fitness_center</span>今日のトレーニングを記録</h2>
+              <h2 style={{ ...h2Style, display: "flex", alignItems: "center", gap: 8 }}><span className="msym" style={{ fontSize: 20, color: T.red }}>fitness_center</span>{tx.recordTitle}</h2>
               <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
                 <select value={exercise} onChange={(e) => { setExercise(e.target.value); setExMsg(null); }} style={inputStyle}>
-                  <optgroup label="基本種目">
-                    {EXERCISE_PRESETS.map((e) => <option key={e} value={e}>{e}</option>)}
+                  <optgroup label={tx.grpBasic}>
+                    {EXERCISE_PRESETS.map((e) => <option key={e.key} value={e.key}>{e[lang]}</option>)}
                   </optgroup>
                   {data.customExercises.length > 0 && (
-                    <optgroup label="マイ種目">
+                    <optgroup label={tx.grpCustom}>
                       {data.customExercises.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
                     </optgroup>
                   )}
-                  <option value="__add__">＋ 新しい種目を追加</option>
+                  <option value="__add__">{tx.addNewEx}</option>
                 </select>
                 {exercise === "__add__" && (
                   <div style={{ background: T.surface2, borderRadius: 12, padding: 12, display: "grid", gap: 10, border: `1.5px dashed ${T.line}` }}>
-                    <input style={{ ...inputStyle, background: T.surface }} placeholder="種目名（例: インクラインベンチ）"
+                    <input style={{ ...inputStyle, background: T.surface }} placeholder={tx.exNamePlaceholder}
                       value={customEx} onChange={(e) => { setCustomEx(e.target.value); setExMsg(null); }} />
                     <div>
-                      <p style={{ margin: "0 0 7px", fontSize: 12, fontWeight: 700, color: T.sub }}>効かせる部位（複数選択できます）</p>
+                      <p style={{ margin: "0 0 7px", fontSize: 12, fontWeight: 700, color: T.sub }}>{tx.targetParts}</p>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                         {ALL_PARTS.map((p) => {
                           const on = newExParts.includes(p);
@@ -1027,13 +1280,13 @@ export default function App() {
                                 background: on ? PART_COLORS[p] : T.surface,
                                 color: on ? "#17181C" : T.sub,
                               }}>
-                              {on ? "✓ " : ""}{PART_LABELS[p]}
+                              {on ? "✓ " : ""}{PART_LABELS[lang][p]}
                             </button>
                           );
                         })}
                       </div>
                     </div>
-                    {exMsg && <p style={{ margin: 0, fontSize: 12, color: T.red, fontWeight: 700 }}>⚠ {exMsg}</p>}
+                    {exMsg && <p style={{ margin: 0, fontSize: 12, color: T.red, fontWeight: 700 }}>⚠ {tx.exDup}</p>}
                     <button onClick={addCustomExercise}
                       disabled={!customEx.trim() || newExParts.length === 0}
                       style={{
@@ -1041,18 +1294,18 @@ export default function App() {
                         background: !customEx.trim() || newExParts.length === 0 ? "#3A3F4C" : T.green,
                         color: !customEx.trim() || newExParts.length === 0 ? "#777E8F" : "#0D0F13",
                       }}>
-                      この種目をマイ種目に追加
+                      {tx.addToMyEx}
                     </button>
                     <p style={{ margin: 0, fontSize: 11, color: T.sub, lineHeight: 1.6 }}>
-                      追加した種目はこの端末だけに保存され、選んだ部位の成長に反映されます。
+                      {tx.addExNote}
                     </p>
                   </div>
                 )}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                   {[
-                    { v: weight, set: setWeight, ph: "kg", label: "重量" },
-                    { v: reps, set: setReps, ph: "回", label: "レップ" },
-                    { v: sets, set: setSets, ph: "セット", label: "セット" },
+                    { v: weight, set: setWeight, ph: tx.phKg, label: tx.fWeight },
+                    { v: reps, set: setReps, ph: tx.phReps, label: tx.fReps },
+                    { v: sets, set: setSets, ph: tx.phSets, label: tx.fSets },
                   ].map((f) => (
                     <div key={f.label}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: T.sub, letterSpacing: 1 }}>{f.label}</label>
@@ -1063,7 +1316,7 @@ export default function App() {
                 <button onClick={addLog}
                   disabled={!weight || !reps || !sets || exercise === "__add__"}
                   style={primaryBtn(!weight || !reps || !sets || exercise === "__add__")}>
-                  記録する
+                  {tx.recordBtn}
                 </button>
               </div>
             </section>
@@ -1071,9 +1324,9 @@ export default function App() {
             {/* マイ種目の管理 */}
             {data.customExercises.length > 0 && (
               <section style={cardStyle}>
-                <h3 style={{ ...h2Style, fontSize: 15 }}>💪 マイ種目</h3>
+                <h3 style={{ ...h2Style, fontSize: 15 }}>{tx.myExTitle}</h3>
                 <p style={{ fontSize: 12, color: T.sub, margin: "6px 0 4px" }}>
-                  削除しても、過去の記録とキャラの成長はそのまま残ります。
+                  {tx.myExNote}
                 </p>
                 {data.customExercises.map((c) => (
                   <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderTop: `1px solid ${T.line}`, marginTop: 8 }}>
@@ -1084,11 +1337,11 @@ export default function App() {
                           <span key={p} style={{
                             fontSize: 10, fontWeight: 800, padding: "2px 9px", borderRadius: 999,
                             border: `1px solid ${PART_COLORS[p]}`, color: PART_COLORS[p],
-                          }}>{PART_LABELS[p]}</span>
+                          }}>{PART_LABELS[lang][p]}</span>
                         ))}
                       </div>
                     </div>
-                    <button onClick={() => setDeleteExTarget(c)} aria-label="マイ種目を削除"
+                    <button onClick={() => setDeleteExTarget(c)} aria-label={tx.delMyExAria}
                       style={{ border: "none", background: "none", color: "#555C6E", fontSize: 18, padding: 4 }}>✕</button>
                   </div>
                 ))}
@@ -1097,7 +1350,7 @@ export default function App() {
 
             {grouped.length === 0 ? (
               <section style={{ ...cardStyle, textAlign: "center", color: T.sub }}>
-                まだ記録がありません。<br />最初の1セットが進化の始まりです。
+                {tx.emptyLogs1}<br />{tx.emptyLogs2}
               </section>
             ) : (
               grouped.map(([date, logs]) => (
@@ -1108,7 +1361,7 @@ export default function App() {
                   {logs.map((l) => (
                     <div key={l.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderTop: `1px solid ${T.line}` }}>
                       <div>
-                        <strong style={{ fontWeight: 700 }}>{l.exercise}</strong>
+                        <strong style={{ fontWeight: 700 }}>{exName(l.exercise, lang)}</strong>
                         {l.pr && (
                           <span style={{
                             marginLeft: 6, fontSize: 10, fontWeight: 900, color: "#17181C",
@@ -1116,12 +1369,12 @@ export default function App() {
                           }}>PR</span>
                         )}
                         <div style={{ color: T.sub, fontSize: 13, marginTop: 2 }}>
-                          <span style={{ fontFamily: T.num, color: T.ink, fontSize: 15, letterSpacing: 0.5 }}>{l.weight}</span>kg ×{" "}
-                          <span style={{ fontFamily: T.num, color: T.ink, fontSize: 15 }}>{l.reps}</span>回 ×{" "}
-                          <span style={{ fontFamily: T.num, color: T.ink, fontSize: 15 }}>{l.sets}</span>セット
+                          <span style={{ fontFamily: T.num, color: T.ink, fontSize: 15, letterSpacing: 0.5 }}>{l.weight}</span>{tx.uKg} ×{" "}
+                          <span style={{ fontFamily: T.num, color: T.ink, fontSize: 15 }}>{l.reps}</span>{tx.uReps} ×{" "}
+                          <span style={{ fontFamily: T.num, color: T.ink, fontSize: 15 }}>{l.sets}</span>{tx.uSets}
                         </div>
                       </div>
-                      <button onClick={() => setDeleteTarget(l)} aria-label="削除"
+                      <button onClick={() => setDeleteTarget(l)} aria-label={tx.delAria}
                         style={{ border: "none", background: "none", color: "#555C6E", fontSize: 18, padding: 4 }}>✕</button>
                     </div>
                   ))}
@@ -1159,18 +1412,18 @@ export default function App() {
               <p style={{ position: "absolute", top: 14, left: 0, right: 0, margin: 0, textAlign: "center", fontFamily: T.num, fontSize: 76, lineHeight: 1, color: "transparent", WebkitTextStroke: "1px #343940", letterSpacing: 3, pointerEvents: "none" }}>MACHO</p>
               <div style={{ position: "relative" }}><MuscleCharacter levels={partLevels} /></div>
               <div style={{ textAlign: "center", padding: "12px 16px 16px" }}>
-                <h2 style={{ fontFamily: T.display, fontSize: 26, fontWeight: 400, margin: 0, letterSpacing: 1, color: T.ink, textShadow: T.emboss }}>{STAGES[stageIdx].name}</h2>
-                <p style={{ margin: "6px 0 0", fontSize: 13, color: T.sub }}>{STAGES[stageIdx].desc}</p>
-                <p style={{ margin: "8px 0 0", fontSize: 11, color: T.sub2 }}>👆 タップすると喋ります</p>
+                <h2 style={{ fontFamily: T.display, fontSize: 26, fontWeight: 400, margin: 0, letterSpacing: 1, color: T.ink, textShadow: T.emboss }}>{STAGES[stageIdx].name[lang]}</h2>
+                <p style={{ margin: "6px 0 0", fontSize: 13, color: T.sub }}>{STAGES[stageIdx].desc[lang]}</p>
+                <p style={{ margin: "8px 0 0", fontSize: 11, color: T.sub2 }}>{tx.tapToSpeak}</p>
               </div>
             </section>
 
             <section style={cardStyle}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
                 <span style={{ fontSize: 13, color: T.sub, fontWeight: 700 }}>
-                  トレーニング日数 <span style={{ fontFamily: T.num, fontSize: 20, color: T.ink, marginLeft: 4 }}>{uniqueDays}</span>日
+                  {tx.trainingDays} <span style={{ fontFamily: T.num, fontSize: 20, color: T.ink, marginLeft: 4 }}>{uniqueDays}</span>{lang === "ja" ? "日" : " " + tx.dayUnit}
                 </span>
-                {nextStage && <span style={{ fontSize: 12, color: T.red, fontWeight: 800 }}>進化まであと{nextStage.days - uniqueDays}日</span>}
+                {nextStage && <span style={{ fontSize: 12, color: T.red, fontWeight: 800 }}>{lang === "ja" ? `進化まであと${nextStage.days - uniqueDays}日` : `${nextStage.days - uniqueDays} days to evolve`}</span>}
               </div>
               <div style={{ height: 12, background: T.surface2, borderRadius: 999, overflow: "hidden", boxShadow: T.groove }}>
                 <div style={{
@@ -1184,14 +1437,14 @@ export default function App() {
             </section>
 
             <section style={cardStyle}>
-              <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 10 }}>部位別の成長度</h3>
+              <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 10 }}>{tx.growthTitle}</h3>
               <p style={{ fontSize: 12, color: T.sub, margin: "0 0 12px" }}>
-                記録した種目の部位だけが育ちます。偏るとキャラも偏った体型に…！
+                {tx.growthNote}
               </p>
               <div style={{ display: "grid", gap: 11 }}>
                 {ALL_PARTS.map((p, i) => (
                   <div key={p} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ width: 38, fontFamily: T.display, fontSize: 13, fontWeight: 400, color: T.ink }}>{PART_LABELS[p]}</span>
+                    <span style={{ width: lang === "ja" ? 38 : 70, fontFamily: T.display, fontSize: lang === "ja" ? 13 : 11, fontWeight: 400, color: T.ink }}>{PART_LABELS[lang][p]}</span>
                     <div style={{ flex: 1, height: 13, background: T.surface2, borderRadius: 2, overflow: "hidden", boxShadow: T.groove }}>
                       <div style={{ height: "100%", background: PART_COLORS[p], width: `${Math.round(partLevels[p] * 100)}%`, boxShadow: `0 0 12px ${PART_COLORS[p]}66`, transition: "width 0.6s", animation: "barFill 1s cubic-bezier(.2,.8,.2,1) both", animationDelay: `${i * 0.08}s` }} />
                     </div>
@@ -1202,10 +1455,10 @@ export default function App() {
             </section>
 
             <section style={cardStyle}>
-              <h3 style={{ ...h2Style, fontSize: 15 }}>獲得した称号（掛け声コレクション）</h3>
+              <h3 style={{ ...h2Style, fontSize: 15 }}>{tx.titlesTitle}</h3>
               {data.titles.length === 0 ? (
                 <p style={{ color: T.sub, fontSize: 13, margin: "10px 0 0" }}>
-                  まだ称号がありません。「目標」タブで2週間目標を達成すると、大会の掛け声がもらえます！
+                  {tx.noTitles}
                 </p>
               ) : (
                 <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
@@ -1217,7 +1470,7 @@ export default function App() {
                       padding: 12, borderRadius: 2,
                     }}>
                       <span style={{ fontFamily: T.num, fontSize: 17, color: T.sub2 }}>{String(i + 1).padStart(2, "0")}</span>
-                      <span style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 900, color: T.yellow, lineHeight: 1.6 }}>{t}</span>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 900, color: T.yellow, lineHeight: 1.6 }}>{shoutText(t, lang)}</span>
                     </div>
                   ))}
                 </div>
@@ -1229,9 +1482,10 @@ export default function App() {
         {/* ===== 軽トラ / ヘリ ===== */}
         {tab === "truck" && (() => {
           const Vehicle = isHeli ? Heli : KeiTruck;
-          const vName = isHeli ? "ヘリコプター" : "軽トラ";
-          const vUnit = isHeli ? "機" : "台";
-          const vSpec = isHeli ? `${HELI_KG / 1000}t/機` : `最大積載${TRUCK_KG}kg`;
+          const vName = isHeli ? tx.vNameHeli : tx.vNameTruck;
+          const vUnit = isHeli ? tx.vUnitHeli : tx.vUnitTruck; // EN では空文字
+          const vUnitJa = isHeli ? "機" : "台";
+          const vSpec = isHeli ? tx.vSpecHeli : tx.vSpecTruck;
           return (
             <div style={{ display: "grid", gap: 14 }}>
               {canUpgrade && (
@@ -1241,19 +1495,19 @@ export default function App() {
                 }}>
                   <span style={{ fontSize: 28 }}>🚁</span>
                   <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontWeight: 800, fontSize: 14 }}>軽トラ100台を制覇！</p>
-                    <p style={{ margin: "2px 0 0", fontSize: 12, color: T.sub }}>次のステージ「ヘリコプター（2t/機）」に挑戦できます。</p>
+                    <p style={{ margin: 0, fontWeight: 800, fontSize: 14 }}>{tx.upBanner1}</p>
+                    <p style={{ margin: "2px 0 0", fontSize: 12, color: T.sub }}>{tx.upBanner2}</p>
                   </div>
                   <button onClick={() => setUpgradeConfirm(true)}
                     style={{ padding: "10px 14px", borderRadius: 10, border: "none", background: T.yellow, color: "#17181C", fontWeight: 900, fontFamily: T.body, fontSize: 13, whiteSpace: "nowrap" }}>
-                    変更する
+                    {tx.change}
                   </button>
                 </section>
               )}
 
               <section style={{ ...cardStyle, textAlign: "center" }}>
                 <p style={{ margin: 0, fontFamily: T.cond, fontWeight: 700, fontSize: 11, color: T.sub, letterSpacing: 4 }}>
-                  {isHeli ? "HELI CONVERTED VOLUME" : "TOTAL LIFTED VOLUME"}
+                  {isHeli ? tx.volHeli : tx.volTruck}
                 </p>
                 <p style={{ fontFamily: T.num, fontSize: 54, margin: "4px 0 0", lineHeight: 1, color: T.ink, textShadow: "0 4px 0 #0A0B0D,0 6px 18px rgba(0,0,0,.8)" }}>
                   {vehicleVolume.toLocaleString()}<span style={{ fontFamily: T.cond, fontWeight: 700, fontSize: 18, letterSpacing: 2, color: T.sub, marginLeft: 6 }}>KG</span>
@@ -1261,19 +1515,21 @@ export default function App() {
                 <div style={{ marginTop: 14, display: "inline-flex", alignItems: "center", gap: 10, background: "linear-gradient(180deg,#2A2E34,#15181C)", border: `1px solid ${T.line2}`, padding: "10px 15px", borderRadius: 3, boxShadow: "inset 0 1px 0 rgba(255,255,255,.16),0 4px 12px rgba(0,0,0,.6)" }}>
                   <span style={{ fontFamily: T.display, fontSize: 12, color: T.sub }}>{vName}（{vSpec}）×</span>
                   <span style={{ fontFamily: T.num, fontSize: 34, lineHeight: 0.85, color: T.yellow, textShadow: "0 0 18px rgba(232,195,58,.45)" }}>{truckCount}</span>
-                  <span style={{ fontFamily: T.display, fontSize: 12, color: T.sub }}>{vUnit}</span>
+                  {vUnit && <span style={{ fontFamily: T.display, fontSize: 12, color: T.sub }}>{vUnit}</span>}
                 </div>
                 {isHeli && (
                   <p style={{ margin: "8px 0 0", fontSize: 11, color: T.sub }}>
-                    🛻 軽トラ時代を含む累計：{totalVolume.toLocaleString()}kg
+                    {lang === "ja" ? `🛻 軽トラ時代を含む累計：${totalVolume.toLocaleString()}kg` : `🛻 Cumulative incl. truck era: ${totalVolume.toLocaleString()}kg`}
                   </p>
                 )}
               </section>
 
               <section style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.sub, fontWeight: 700, marginBottom: 6 }}>
-                  <span>次の1{vUnit}まで</span>
-                  <span style={{ color: T.ink }}>あと <span style={{ fontFamily: T.num, fontSize: 15, color: T.green }}>{(unitKg - truckRemainder).toLocaleString()}</span> kg</span>
+                  <span>{isHeli ? tx.nextHeli : tx.nextTruck}</span>
+                  <span style={{ color: T.ink }}>{lang === "ja"
+                    ? <>あと <span style={{ fontFamily: T.num, fontSize: 15, color: T.green }}>{(unitKg - truckRemainder).toLocaleString()}</span> kg</>
+                    : <><span style={{ fontFamily: T.num, fontSize: 15, color: T.green }}>{(unitKg - truckRemainder).toLocaleString()}</span> kg to go</>}</span>
                 </div>
                 <div style={{ height: 12, background: T.surface2, borderRadius: 999, overflow: "hidden", boxShadow: T.groove }}>
                   <div style={{ height: "100%", width: `${(truckRemainder / unitKg) * 100}%`, background: `linear-gradient(90deg, ${T.green}, ${T.blue})`, borderRadius: 999, transition: "width 0.6s" }} />
@@ -1281,21 +1537,27 @@ export default function App() {
               </section>
 
               <section style={{ ...cardStyle, background: `linear-gradient(180deg, ${T.surface} 0%, #171A21 100%)` }}>
-                <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 4 }}>{isHeli ? "積み上げたヘリの山" : "積み上げた軽トラの山"}</h3>
+                <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 4 }}>{isHeli ? tx.pileHeli : tx.pileTruck}</h3>
                 {truckCount === 0 ? (
                   <div style={{ textAlign: "center", padding: "26px 0", color: T.sub, fontSize: 13 }}>
                     <div style={{ opacity: 0.35, display: "inline-block" }}><Vehicle size={64} /></div>
                     <p style={{ margin: "10px 0 0" }}>
-                      {isHeli
-                        ? `ここから第2章。合計${HELI_KG.toLocaleString()}kg挙げると最初の1機が並びます！`
-                        : `まだ0台。合計${TRUCK_KG}kg挙げると最初の1台が積まれます！`}
+                      {lang === "ja"
+                        ? (isHeli
+                            ? `ここから第2章。合計${HELI_KG.toLocaleString()}kg挙げると最初の1機が並びます！`
+                            : `まだ0台。合計${TRUCK_KG}kg挙げると最初の1台が積まれます！`)
+                        : (isHeli
+                            ? `Chapter 2 starts here. Lift ${HELI_KG.toLocaleString()}kg total to line up your first chopper!`
+                            : `0 so far. Lift ${TRUCK_KG}kg total to stack your first truck!`)}
                     </p>
                   </div>
                 ) : (
                   <div style={{ paddingTop: 8 }}>
                     {truckPile.overflow > 0 && (
                       <p style={{ textAlign: "center", fontSize: 12, color: T.sub, margin: "0 0 4px" }}>
-                        …ほか <strong style={{ color: T.yellow }}>{truckPile.overflow}{vUnit}</strong>（表示は100{vUnit}まで）
+                        {lang === "ja"
+                          ? <>…ほか <strong style={{ color: T.yellow }}>{truckPile.overflow}{vUnitJa}</strong>（表示は100{vUnitJa}まで）</>
+                          : <>…and <strong style={{ color: T.yellow }}>{truckPile.overflow} more</strong> (showing up to 100)</>}
                       </p>
                     )}
                     {truckPile.rows.map((n, i) => {
@@ -1332,9 +1594,13 @@ export default function App() {
                     })}
                     <div style={{ height: 9, margin: "2px 8px 0", background: "repeating-linear-gradient(135deg,#E8C33A 0 9px,#0A0B0D 9px 18px)", opacity: 0.5 }} />
                     <p style={{ textAlign: "center", fontSize: 12, color: T.sub, margin: "10px 0 0" }}>
-                      {isHeli
-                        ? `あなたはヘリコプター${truckCount}機分の鉄を持ち上げました 🚁`
-                        : `あなたはこれまでに軽トラ${truckCount}台分の鉄を持ち上げました 🛻`}
+                      {lang === "ja"
+                        ? (isHeli
+                            ? `あなたはヘリコプター${truckCount}機分の鉄を持ち上げました 🚁`
+                            : `あなたはこれまでに軽トラ${truckCount}台分の鉄を持ち上げました 🛻`)
+                        : (isHeli
+                            ? `You've lifted the equivalent of ${truckCount} helicopters 🚁`
+                            : `You've lifted the equivalent of ${truckCount} kei trucks 🛻`)}
                     </p>
                   </div>
                 )}
@@ -1347,29 +1613,35 @@ export default function App() {
         {tab === "plan" && (
           <div style={{ display: "grid", gap: 14 }}>
             <section style={cardStyle}>
-              <h2 style={h2Style}>HPS 6週間プログラム</h2>
+              <h2 style={h2Style}>{tx.planTitle}</h2>
               <p style={{ fontSize: 13, color: T.sub, margin: "8px 0 12px", lineHeight: 1.7 }}>
-                月曜<strong style={{ color: DAY_TYPES.H.color }}>筋肥大（H）</strong>・水曜<strong style={{ color: DAY_TYPES.P.color }}>パワー（P）</strong>・金曜<strong style={{ color: DAY_TYPES.S.color }}>筋力（S）</strong>を6週間かけて漸進させる計画。BIG3の1RM（1回だけ挙げられる最大重量）を入れると各週の推奨重量を計算します。
+                {lang === "ja" ? (
+                  <>月曜<strong style={{ color: DAY_TYPES.H.color }}>筋肥大（H）</strong>・水曜<strong style={{ color: DAY_TYPES.P.color }}>パワー（P）</strong>・金曜<strong style={{ color: DAY_TYPES.S.color }}>筋力（S）</strong>を6週間かけて漸進させる計画。BIG3の1RM（1回だけ挙げられる最大重量）を入れると各週の推奨重量を計算します。</>
+                ) : (
+                  <>A 6-week plan that progresses Mon <strong style={{ color: DAY_TYPES.H.color }}>Hypertrophy (H)</strong>, Wed <strong style={{ color: DAY_TYPES.P.color }}>Power (P)</strong>, Fri <strong style={{ color: DAY_TYPES.S.color }}>Strength (S)</strong>. Enter your BIG3 1RM (the max you can lift once) and it calculates the recommended weights for each week.</>
+                )}
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                 {[
-                  { k: "bench", label: "ベンチ" },
-                  { k: "squat", label: "スクワット" },
-                  { k: "dead", label: "デッド" },
+                  { k: "bench", label: tx.rmBench },
+                  { k: "squat", label: tx.rmSquat },
+                  { k: "dead", label: tx.rmDead },
                 ].map((f) => (
                   <div key={f.k}>
-                    <label style={{ fontSize: 11, fontWeight: 700, color: T.sub, letterSpacing: 1 }}>{f.label} 1RM</label>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: T.sub, letterSpacing: 1 }}>{f.label} {tx.rm1}</label>
                     <input type="number" inputMode="decimal" min="0" style={inputStyle} placeholder="kg"
                       value={rm[f.k]} onChange={(e) => setRm({ ...rm, [f.k]: e.target.value })} />
                   </div>
                 ))}
               </div>
               <button onClick={generatePlan} style={{ ...primaryBtn(false), width: "100%", marginTop: 10 }}>
-                {data.plan ? "計画を作り直す" : "6週間の計画を作る"}
+                {data.plan ? tx.remakePlan : tx.makePlan}
               </button>
               {data.plan && (
                 <p style={{ margin: "10px 0 0", fontSize: 11, color: T.sub, textAlign: "center" }}>
-                  ✓ 保存済み（{fmtDate(data.plan.createdAt)}作成）— アプリを閉じても消えません
+                  {lang === "ja"
+                    ? `✓ 保存済み（${fmtDate(data.plan.createdAt)}作成）— アプリを閉じても消えません`
+                    : `✓ Saved (created ${fmtDate(data.plan.createdAt)}) — persists after you close the app`}
                 </p>
               )}
             </section>
@@ -1402,30 +1674,31 @@ export default function App() {
                       }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                         <h3 style={{ fontSize: 16, fontWeight: 900, margin: 0, letterSpacing: 1 }}>
-                          {d.day}　<span style={{ color: t.color }}>{d.type}：{t.name}</span>
+                          {hpsDay(d.day, lang)}{lang === "ja" ? "　" : " "}<span style={{ color: t.color }}>{d.type}{lang === "ja" ? "：" : ": "}{t.name[lang]}</span>
                         </h3>
                         <span style={{ fontFamily: T.num, fontSize: 14, color: T.sub }}>{(d.pct * 100).toFixed(1)}%</span>
                       </div>
                       <div style={{ display: "flex", gap: 14, margin: "10px 0 0", fontSize: 13 }}>
-                        <span><strong style={{ fontFamily: T.num, fontSize: 17 }}>{d.reps}</strong></span>
-                        <span>× <strong style={{ fontFamily: T.num, fontSize: 17 }}>{d.sets}</strong> セット</span>
-                        <span style={{ color: d.interval.includes("爆発") ? t.color : T.sub, fontWeight: 700 }}>{d.interval}</span>
+                        <span><strong style={{ fontFamily: T.num, fontSize: 17 }}>{hpsReps(d.reps, lang)}</strong></span>
+                        <span>× <strong style={{ fontFamily: T.num, fontSize: 17 }}>{d.sets}</strong> {tx.setsUnit}</span>
+                        <span style={{ color: d.interval.includes("爆発") ? t.color : T.sub, fontWeight: 700 }}>{hpsInterval(d.interval, lang)}</span>
                       </div>
                       {(data.plan.bench > 0 || data.plan.squat > 0 || data.plan.dead > 0) && (
                         <>
                           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0 0" }}>
-                            {[["ベンチ", "ベンチプレス", data.plan.bench], ["スクワット", "スクワット", data.plan.squat], ["デッド", "デッドリフト", data.plan.dead]]
+                            {[[tx.rmBench, "ベンチプレス", data.plan.bench], [tx.rmSquat, "スクワット", data.plan.squat], [tx.rmDead, "デッドリフト", data.plan.dead]]
                               .filter(([, , v]) => v > 0).map(([n, full, v]) => {
                                 const kg = roundPlate(v * d.pct);
                                 const repsNum = parseInt(d.reps, 10);
                                 return (
-                                  <button key={n}
+                                  <button key={full}
                                     onClick={() => setPlanRecord({
                                       exercise: full, weight: String(kg),
                                       reps: Number.isNaN(repsNum) ? "" : String(repsNum),
                                       sets: String(d.sets),
-                                      day: d.day, typeName: t.name, color: t.color,
-                                      menu: `${d.reps} × ${d.sets}セット`,
+                                      day: hpsDay(d.day, lang), typeName: t.name[lang], color: t.color,
+                                      menu: lang === "ja" ? `${d.reps} × ${d.sets}セット` : `${hpsReps(d.reps, "en")} × ${d.sets} sets`,
+                                      failure: isFailureDay(d.reps),
                                     })}
                                     style={{
                                       background: T.surface2, border: `1px solid ${T.line}`, borderRadius: 8,
@@ -1438,16 +1711,16 @@ export default function App() {
                               })}
                           </div>
                           <p style={{ margin: "8px 0 0", fontSize: 11, color: T.sub }}>
-                            👆 重量をタップすると、その場で実績を記録できます
+                            {tx.weightTapHint}
                           </p>
                         </>
                       )}
-                      <p style={{ margin: "10px 0 0", fontSize: 12, background: T.surface2, padding: "8px 11px", borderRadius: 8, color: T.sub }}>💡 {t.tip}</p>
+                      <p style={{ margin: "10px 0 0", fontSize: 12, background: T.surface2, padding: "8px 11px", borderRadius: 8, color: T.sub }}>💡 {t.tip[lang]}</p>
                     </section>
                   );
                 })}
                 <p style={{ fontSize: 12, color: T.sub, margin: 0, padding: "0 4px", lineHeight: 1.7 }}>
-                  ※ 週が進むほど水曜・金曜の強度が上がります。体調に合わせて重量は無理なく調整し、フォームが崩れたらその日は終了してください。
+                  {tx.planFootnote}
                 </p>
               </>
             )}
@@ -1459,31 +1732,33 @@ export default function App() {
           <div style={{ display: "grid", gap: 14 }}>
             {!data.goal ? (
               <section style={cardStyle}>
-                <h2 style={h2Style}>2週間目標を立てる</h2>
+                <h2 style={h2Style}>{tx.setGoalTitle}</h2>
                 <p style={{ fontSize: 13, color: T.sub, margin: "8px 0 14px", lineHeight: 1.7 }}>
-                  今日から14日間で何日トレーニングするか決めましょう。達成すると<strong style={{ color: T.yellow }}>ボディビル大会の掛け声称号</strong>を獲得！
+                  {lang === "ja"
+                    ? <>今日から14日間で何日トレーニングするか決めましょう。達成すると<strong style={{ color: T.yellow }}>ボディビル大会の掛け声称号</strong>を獲得！</>
+                    : <>Decide how many days you'll train over the next 14 days. Clear it to earn a <strong style={{ color: T.yellow }}>bodybuilding contest cheer title</strong>!</>}
                 </p>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, marginBottom: 16 }}>
                   <button onClick={() => setGoalTarget(Math.max(1, goalTarget - 1))}
                     style={{ width: 46, height: 46, borderRadius: 999, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontSize: 22 }}>−</button>
                   <div style={{ textAlign: "center" }}>
                     <span style={{ fontFamily: T.num, fontSize: 52, lineHeight: 1 }}>{goalTarget}</span>
-                    <span style={{ fontSize: 15, marginLeft: 4, color: T.sub }}>日</span>
+                    <span style={{ fontSize: 15, marginLeft: 4, color: T.sub }}>{tx.dayUnit}</span>
                   </div>
                   <button onClick={() => setGoalTarget(Math.min(14, goalTarget + 1))}
                     style={{ width: 46, height: 46, borderRadius: 999, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontSize: 22 }}>＋</button>
                 </div>
-                <button onClick={startGoal} style={{ ...primaryBtn(false), width: "100%" }}>目標スタート</button>
+                <button onClick={startGoal} style={{ ...primaryBtn(false), width: "100%" }}>{tx.goalStart}</button>
               </section>
             ) : (
               <section style={{ ...cardStyle, borderLeft: `5px solid ${data.goal.rewarded ? T.green : T.red}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                  <h2 style={h2Style}>挑戦中の目標</h2>
+                  <h2 style={h2Style}>{tx.activeGoal}</h2>
                   <span style={{ fontSize: 11, color: T.sub }}>{fmtDate(data.goal.start)} 〜 {fmtDate(addDays(data.goal.end, -1))}</span>
                 </div>
                 <p style={{ textAlign: "center", margin: "16px 0 8px" }}>
                   <span style={{ fontFamily: T.num, fontSize: 46 }}>{goalDaysCount}</span>
-                  <span style={{ fontSize: 16, color: T.sub }}> / {data.goal.target}日</span>
+                  <span style={{ fontSize: 16, color: T.sub }}> / {data.goal.target}{lang === "ja" ? "日" : " " + tx.dayUnit}</span>
                 </p>
                 <div style={{ height: 14, background: T.surface2, borderRadius: 999, overflow: "hidden", boxShadow: T.groove }}>
                   <div style={{
@@ -1494,11 +1769,16 @@ export default function App() {
                 </div>
                 {data.goal.rewarded ? (
                   <p style={{ textAlign: "center", margin: "14px 0 0", fontWeight: 800, color: T.green }}>
-                    🎉 達成！称号「{data.goal.title}」を獲得しました
+                    {lang === "ja"
+                      ? `🎉 達成！称号「${shoutText(data.goal.title, lang)}」を獲得しました`
+                      : `🎉 Achieved! You earned the title "${shoutText(data.goal.title, lang)}"`}
                   </p>
                 ) : (
                   <p style={{ textAlign: "center", margin: "14px 0 0", fontSize: 13, color: T.sub }}>
-                    期限まであと{Math.max(0, Math.ceil((new Date(data.goal.end + "T00:00:00") - new Date(todayStr() + "T00:00:00")) / 86400000))}日。今日の1回が未来のバルク。
+                    {(() => {
+                      const daysLeft = Math.max(0, Math.ceil((new Date(data.goal.end + "T00:00:00") - new Date(todayStr() + "T00:00:00")) / 86400000));
+                      return lang === "ja" ? `期限まであと${daysLeft}日。今日の1回が未来のバルク。` : `${daysLeft} days left. Today's rep is tomorrow's bulk.`;
+                    })()}
                   </p>
                 )}
                 {(goalExpired || data.goal.rewarded) && (
@@ -1506,19 +1786,19 @@ export default function App() {
                     marginTop: 14, width: "100%", padding: "12px", borderRadius: 12,
                     border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink,
                     fontWeight: 800, fontSize: 14, fontFamily: T.body,
-                  }}>この期間を締めて、次の目標へ</button>
+                  }}>{tx.finishGoal}</button>
                 )}
               </section>
             )}
 
             {data.goalHistory.length > 0 && (
               <section style={cardStyle}>
-                <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 8 }}>過去の挑戦</h3>
+                <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 8 }}>{tx.pastGoals}</h3>
                 {data.goalHistory.map((g, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderTop: `1px solid ${T.line}`, fontSize: 13 }}>
-                    <span style={{ color: T.sub }}>{fmtDate(g.start)}〜　<span style={{ color: T.ink, fontFamily: T.num, fontSize: 14 }}>{g.count}/{g.target}</span>日</span>
+                    <span style={{ color: T.sub }}>{fmtDate(g.start)}〜　<span style={{ color: T.ink, fontFamily: T.num, fontSize: 14 }}>{g.count}/{g.target}</span>{lang === "ja" ? "日" : " " + tx.dayUnit}</span>
                     <span style={{ fontWeight: 800, color: g.achieved ? T.green : "#5A6172" }}>
-                      {g.achieved ? "達成 🏆" : "未達"}
+                      {g.achieved ? tx.achievedTag : tx.failedTag}
                     </span>
                   </div>
                 ))}
@@ -1530,23 +1810,44 @@ export default function App() {
         {/* ===== 設定 ===== */}
         {tab === "settings" && (
           <div style={{ display: "grid", gap: 14 }}>
+            {/* 言語 / Language */}
             <section style={cardStyle}>
-              <h2 style={h2Style}>データのバックアップ</h2>
+              <h2 style={h2Style}>{tx.langLabel}</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
+                {[{ id: "ja", label: "日本語" }, { id: "en", label: "English" }].map((o) => {
+                  const on = lang === o.id;
+                  return (
+                    <button key={o.id} onClick={() => changeLang(o.id)}
+                      style={{
+                        padding: "13px", borderRadius: 4, fontFamily: T.body, fontWeight: 800, fontSize: 15,
+                        border: `1.5px solid ${on ? T.red : T.line2}`,
+                        background: on ? T.redContainer : T.surface2,
+                        color: on ? T.red : T.ink,
+                        boxShadow: on ? "none" : T.groove,
+                      }}>
+                      {on ? "✓ " : ""}{o.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section style={cardStyle}>
+              <h2 style={h2Style}>{tx.backupTitle}</h2>
               <p style={{ fontSize: 13, color: T.sub, margin: "8px 0 14px", lineHeight: 1.7 }}>
-                記録はこの端末のブラウザ内だけに保存されています。機種変更やブラウザのデータ消去で消えるため、
-                <strong style={{ color: T.ink }}>ときどき書き出して保管</strong>しておくと安心です。別の端末へ引き継ぐときもこのファイルを使います。
+                {tx.backupIntro1}<strong style={{ color: T.ink }}>{tx.backupIntro2}</strong>{tx.backupIntro3}
               </p>
 
               <div style={{ display: "grid", gap: 10 }}>
                 <button onClick={exportData} style={{ ...primaryBtn(false), width: "100%" }}>
-                  ⬇ バックアップを書き出す（JSON）
+                  {tx.exportBtn}
                 </button>
                 <label style={{
                   display: "block", textAlign: "center", padding: "13px", borderRadius: 12,
                   border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink,
                   fontWeight: 800, fontSize: 15, cursor: "pointer",
                 }}>
-                  ⬆ バックアップから復元する
+                  {tx.importBtn}
                   <input type="file" accept="application/json,.json" onChange={handleFile} style={{ display: "none" }} />
                 </label>
               </div>
@@ -1556,20 +1857,20 @@ export default function App() {
                   margin: "12px 0 0", fontSize: 13, fontWeight: 700, textAlign: "center",
                   color: ioMsg.type === "ok" ? T.green : T.red,
                 }}>
-                  {ioMsg.type === "ok" ? "✓ " : "⚠ "}{ioMsg.text}
+                  {ioMsg.type === "ok" ? "✓ " : "⚠ "}{tx[ioMsg.key]}
                 </p>
               )}
             </section>
 
             <section style={cardStyle}>
-              <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 8 }}>現在のデータ</h3>
+              <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 8 }}>{tx.currentData}</h3>
               <div style={{ display: "grid", gap: 6, fontSize: 13 }}>
                 {[
-                  ["記録件数", `${data.logs.length} 件`],
-                  ["トレーニング日数", `${uniqueDays} 日`],
-                  ["マイ種目", `${data.customExercises.length} 個`],
-                  ["獲得した称号", `${data.titles.length} 個`],
-                  ["過去の目標挑戦", `${data.goalHistory.length} 回`],
+                  [tx.dLogs, `${data.logs.length} ${tx.uItems}`],
+                  [tx.dDays, `${uniqueDays} ${tx.dayUnit}`],
+                  [tx.dMyEx, `${data.customExercises.length} ${tx.uCount}`],
+                  [tx.dTitles, `${data.titles.length} ${tx.uCount}`],
+                  [tx.dGoals, `${data.goalHistory.length} ${tx.uTimes}`],
                 ].map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: `1px solid ${T.line}` }}>
                     <span style={{ color: T.sub }}>{k}</span>
@@ -1580,8 +1881,7 @@ export default function App() {
             </section>
 
             <p style={{ fontSize: 11, color: T.sub, padding: "0 4px", lineHeight: 1.7 }}>
-              ※ 復元すると今の記録はファイルの内容で<strong style={{ color: T.ink }}>すべて置き換わります</strong>。
-              大事な記録がある場合は、先にバックアップを書き出しておくことをおすすめします。
+              {tx.restoreWarn1}<strong style={{ color: T.ink }}>{tx.restoreWarn2}</strong>{tx.restoreWarn3}
             </p>
           </div>
         )}
@@ -1591,10 +1891,10 @@ export default function App() {
       <footer style={{ maxWidth: 520, margin: "0 auto", padding: "4px 16px 20px", textAlign: "center" }}>
         <p style={{ margin: "0 0 6px", fontSize: 11, color: "#6B7386" }}>
           {[
-            { href: "/guide.html", label: "使い方ガイド" },
-            { href: "/articles.html", label: "コラム" },
-            { href: "/contact.html", label: "お問い合わせ" },
-            { href: "/privacy.html", label: "プライバシーポリシー" },
+            { href: "/guide.html", label: tx.fGuide },
+            { href: "/articles.html", label: tx.fColumns },
+            { href: "/contact.html", label: tx.fContact },
+            { href: "/privacy.html", label: tx.fPrivacy },
           ].map((l, i) => (
             <span key={l.href}>
               {i > 0 && "・"}
@@ -1615,18 +1915,18 @@ export default function App() {
           <div style={{ textAlign: "center", animation: "popIn 0.5s ease-out" }}>
             <p style={{ fontSize: 44, margin: 0, animation: "shake 0.6s ease-in-out 0.4s 2" }}>🏋️</p>
             <p style={{ color: T.yellow, fontWeight: 900, fontSize: 22, letterSpacing: 2, margin: "8px 0 4px" }}>
-              自己ベスト更新！！
+              {tx.prTitle}
             </p>
-            <p style={{ color: "#fff", fontWeight: 900, fontSize: 19, margin: "0 0 10px" }}>{prCelebration.exercise}</p>
+            <p style={{ color: "#fff", fontWeight: 900, fontSize: 19, margin: "0 0 10px" }}>{exName(prCelebration.exercise, lang)}</p>
             <p style={{ margin: 0 }}>
               <span style={{ fontFamily: T.num, fontSize: 26, color: T.sub, textDecoration: "line-through" }}>{prCelebration.from}kg</span>
               <span style={{ color: T.sub, fontSize: 20, margin: "0 10px" }}>→</span>
               <span style={{ fontFamily: T.num, fontSize: 44, color: T.yellow, textShadow: `0 0 24px rgba(255,201,60,0.5)` }}>{prCelebration.to}kg</span>
             </p>
             <p style={{ color: "#fff", fontWeight: 800, fontSize: 15, marginTop: 14 }}>
-              「{CHARA_QUOTES[Math.floor(Math.random() * CHARA_QUOTES.length)]}」
+              「{(CHARA_QUOTES[lang] || CHARA_QUOTES.ja)[Math.floor(Math.random() * CHARA_QUOTES[lang].length)]}」
             </p>
-            <p style={{ color: T.sub, fontSize: 13, marginTop: 18 }}>タップして閉じる</p>
+            <p style={{ color: T.sub, fontSize: 13, marginTop: 18 }}>{tx.tapClose}</p>
           </div>
         </div>
       )}
@@ -1640,7 +1940,7 @@ export default function App() {
           padding: "13px 22px", borderRadius: 14, boxShadow: "0 6px 20px rgba(61,220,151,0.4)",
           whiteSpace: "nowrap",
         }}>
-          🔔 インターバル終了！次のセット！
+          {tx.timerDone}
         </div>
       )}
 
@@ -1653,22 +1953,36 @@ export default function App() {
           }}>
           <div role="dialog" aria-label="乗り物変更の確認" onClick={(e) => e.stopPropagation()}
             style={{ ...cardStyle, width: "100%", maxWidth: 340, animation: "popIn 0.25s ease-out" }}>
-            <h3 style={{ ...h2Style, fontSize: 16 }}>🚁 ヘリコプターに変更しますか？</h3>
-            <p style={{ fontSize: 13, color: T.sub, margin: "10px 0", lineHeight: 1.8 }}>
-              次のステージは <strong style={{ color: T.ink }}>ヘリコプター（1機 = 2,000kg）</strong>。
-              変更するとカウントが<strong style={{ color: T.red }}>リセットされ、1機目からのスタート</strong>になります。
-            </p>
-            <p style={{ fontSize: 12, color: T.sub, margin: "0 0 14px" }}>
-              ※ トレーニング記録・キャラの成長・累計挙上量は消えません。一度変更すると軽トラには戻れません。
-            </p>
+            <h3 style={{ ...h2Style, fontSize: 16 }}>{tx.upTitle}</h3>
+            {lang === "ja" ? (
+              <>
+                <p style={{ fontSize: 13, color: T.sub, margin: "10px 0", lineHeight: 1.8 }}>
+                  次のステージは <strong style={{ color: T.ink }}>ヘリコプター（1機 = 2,000kg）</strong>。
+                  変更するとカウントが<strong style={{ color: T.red }}>リセットされ、1機目からのスタート</strong>になります。
+                </p>
+                <p style={{ fontSize: 12, color: T.sub, margin: "0 0 14px" }}>
+                  ※ トレーニング記録・キャラの成長・累計挙上量は消えません。一度変更すると軽トラには戻れません。
+                </p>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: 13, color: T.sub, margin: "10px 0", lineHeight: 1.8 }}>
+                  The next stage is a <strong style={{ color: T.ink }}>helicopter (1 = 2,000kg)</strong>.
+                  Upgrading <strong style={{ color: T.red }}>resets the count and starts you from your first chopper</strong>.
+                </p>
+                <p style={{ fontSize: 12, color: T.sub, margin: "0 0 14px" }}>
+                  * Your logs, character growth, and cumulative volume are kept. You can't go back to trucks once you upgrade.
+                </p>
+              </>
+            )}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button onClick={() => setUpgradeConfirm(false)}
                 style={{ padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                キャンセル
+                {tx.cancel}
               </button>
               <button onClick={upgradeToHeli}
                 style={{ padding: "12px", borderRadius: 10, border: "none", background: T.yellow, color: "#17181C", fontWeight: 900, fontFamily: T.body, fontSize: 14 }}>
-                変更する
+                {tx.change}
               </button>
             </div>
           </div>
@@ -1684,29 +1998,31 @@ export default function App() {
           }}>
           <div role="dialog" aria-label="復元の確認" onClick={(e) => e.stopPropagation()}
             style={{ ...cardStyle, width: "100%", maxWidth: 340, animation: "popIn 0.25s ease-out" }}>
-            <h3 style={{ ...h2Style, fontSize: 16 }}>このデータで復元しますか？</h3>
+            <h3 style={{ ...h2Style, fontSize: 16 }}>{tx.importTitle}</h3>
             <div style={{ background: T.surface2, borderRadius: 10, padding: "10px 12px", margin: "12px 0", fontSize: 13, display: "grid", gap: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: T.sub }}>記録件数</span><strong>{importPreview.logs.length} 件</strong>
+                <span style={{ color: T.sub }}>{tx.iRecords}</span><strong>{importPreview.logs.length} {tx.uItems}</strong>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: T.sub }}>称号</span><strong>{importPreview.titles.length} 個</strong>
+                <span style={{ color: T.sub }}>{tx.iTitles}</span><strong>{importPreview.titles.length} {tx.uCount}</strong>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: T.sub }}>目標履歴</span><strong>{importPreview.goalHistory.length} 回</strong>
+                <span style={{ color: T.sub }}>{tx.iGoals}</span><strong>{importPreview.goalHistory.length} {tx.uTimes}</strong>
               </div>
             </div>
             <p style={{ fontSize: 12, color: T.red, margin: "0 0 14px", fontWeight: 700 }}>
-              ⚠ 今この端末にある記録（{data.logs.length}件）はすべて上書きされます。
+              {lang === "ja"
+                ? `⚠ 今この端末にある記録（${data.logs.length}件）はすべて上書きされます。`
+                : `⚠ All logs currently on this device (${data.logs.length}) will be overwritten.`}
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button onClick={() => setImportPreview(null)}
                 style={{ padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                キャンセル
+                {tx.cancel}
               </button>
               <button onClick={confirmImport}
                 style={{ padding: "12px", borderRadius: 10, border: "none", background: T.red, color: "#fff", fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                復元する
+                {tx.restoreBtn}
               </button>
             </div>
           </div>
@@ -1722,22 +2038,22 @@ export default function App() {
           }}>
           <div role="dialog" aria-label="削除の確認" onClick={(e) => e.stopPropagation()}
             style={{ ...cardStyle, width: "100%", maxWidth: 340, animation: "popIn 0.25s ease-out" }}>
-            <h3 style={{ ...h2Style, fontSize: 16 }}>この記録を削除しますか？</h3>
+            <h3 style={{ ...h2Style, fontSize: 16 }}>{tx.delTitle}</h3>
             <div style={{ background: T.surface2, borderRadius: 10, padding: "10px 12px", margin: "12px 0" }}>
-              <strong style={{ fontWeight: 800 }}>{deleteTarget.exercise}</strong>
+              <strong style={{ fontWeight: 800 }}>{exName(deleteTarget.exercise, lang)}</strong>
               <div style={{ fontSize: 13, color: T.sub, marginTop: 2 }}>
-                {fmtDate(deleteTarget.date)}　{deleteTarget.weight}kg × {deleteTarget.reps}回 × {deleteTarget.sets}セット
+                {fmtDate(deleteTarget.date)}　{deleteTarget.weight}{tx.uKg} × {deleteTarget.reps}{tx.uReps} × {deleteTarget.sets}{tx.uSets}
               </div>
             </div>
-            <p style={{ fontSize: 12, color: T.sub, margin: "0 0 14px" }}>削除すると元に戻せません。</p>
+            <p style={{ fontSize: 12, color: T.sub, margin: "0 0 14px" }}>{tx.delIrreversible}</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button onClick={() => setDeleteTarget(null)}
                 style={{ padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                キャンセル
+                {tx.cancel}
               </button>
               <button onClick={() => { deleteLog(deleteTarget.id); setDeleteTarget(null); }}
                 style={{ padding: "12px", borderRadius: 10, border: "none", background: T.red, color: "#fff", fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                削除する
+                {tx.delBtn}
               </button>
             </div>
           </div>
@@ -1753,15 +2069,17 @@ export default function App() {
           }}>
           <div role="dialog" aria-label="実績の記録" onClick={(e) => e.stopPropagation()}
             style={{ ...cardStyle, width: "100%", maxWidth: 340, animation: "popIn 0.25s ease-out", borderLeft: `5px solid ${planRecord.color}` }}>
-            <h3 style={{ ...h2Style, fontSize: 16 }}>📝 {planRecord.exercise} を記録</h3>
+            <h3 style={{ ...h2Style, fontSize: 16 }}>{lang === "ja" ? `📝 ${exName(planRecord.exercise, lang)} を記録` : `📝 Log ${exName(planRecord.exercise, lang)}`}</h3>
             <p style={{ fontSize: 12, color: T.sub, margin: "8px 0 12px" }}>
-              {planRecord.day}（{planRecord.typeName}）のメニュー：<strong style={{ color: planRecord.color }}>{planRecord.menu}</strong>
+              {lang === "ja"
+                ? <>{planRecord.day}（{planRecord.typeName}）のメニュー：<strong style={{ color: planRecord.color }}>{planRecord.menu}</strong></>
+                : <>{planRecord.day} ({planRecord.typeName}) plan: <strong style={{ color: planRecord.color }}>{planRecord.menu}</strong></>}
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
               {[
-                { k: "weight", ph: "kg", label: "重量" },
-                { k: "reps", ph: "回", label: "レップ" },
-                { k: "sets", ph: "セット", label: "セット" },
+                { k: "weight", ph: tx.phKg, label: tx.fWeight },
+                { k: "reps", ph: tx.phReps, label: tx.fReps },
+                { k: "sets", ph: tx.phSets, label: tx.fSets },
               ].map((f) => (
                 <div key={f.k}>
                   <label style={{ fontSize: 11, fontWeight: 700, color: T.sub, letterSpacing: 1 }}>{f.label}</label>
@@ -1771,19 +2089,19 @@ export default function App() {
               ))}
             </div>
             <p style={{ fontSize: 11, color: T.sub, margin: "10px 0 0", lineHeight: 1.6 }}>
-              {planRecord.menu.includes("限界")
-                ? "「限界まで」の日は、実際にこなせた回数をレップに入力してください。"
-                : "計画の推奨値を入れてあります。実際の重量・回数に合わせて調整してください。"}
+              {planRecord.failure
+                ? (lang === "ja" ? "「限界まで」の日は、実際にこなせた回数をレップに入力してください。" : "On a \"to failure\" day, enter the number of reps you actually managed.")
+                : (lang === "ja" ? "計画の推奨値を入れてあります。実際の重量・回数に合わせて調整してください。" : "The plan's recommended values are pre-filled. Adjust them to your actual weight and reps.")}
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 14 }}>
               <button onClick={() => setPlanRecord(null)}
                 style={{ padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                キャンセル
+                {tx.cancel}
               </button>
               <button onClick={savePlanRecord}
                 disabled={!planRecord.weight || !planRecord.reps || !planRecord.sets}
                 style={{ ...primaryBtn(!planRecord.weight || !planRecord.reps || !planRecord.sets), padding: "12px", fontSize: 14, borderRadius: 10 }}>
-                記録する
+                {tx.recordBtn}
               </button>
             </div>
           </div>
@@ -1799,7 +2117,7 @@ export default function App() {
           padding: "13px 22px", borderRadius: 14, boxShadow: "0 6px 20px rgba(61,220,151,0.4)",
           whiteSpace: "nowrap",
         }}>
-          ✅ 記録しました！「記録」タブで確認できます
+          {tx.planSavedToast}
         </div>
       )}
 
@@ -1812,7 +2130,7 @@ export default function App() {
           }}>
           <div role="dialog" aria-label="マイ種目削除の確認" onClick={(e) => e.stopPropagation()}
             style={{ ...cardStyle, width: "100%", maxWidth: 340, animation: "popIn 0.25s ease-out" }}>
-            <h3 style={{ ...h2Style, fontSize: 16 }}>このマイ種目を削除しますか？</h3>
+            <h3 style={{ ...h2Style, fontSize: 16 }}>{tx.delExTitle}</h3>
             <div style={{ background: T.surface2, borderRadius: 10, padding: "10px 12px", margin: "12px 0" }}>
               <strong style={{ fontWeight: 800 }}>{deleteExTarget.name}</strong>
               <div style={{ display: "flex", gap: 5, marginTop: 6, flexWrap: "wrap" }}>
@@ -1820,21 +2138,21 @@ export default function App() {
                   <span key={p} style={{
                     fontSize: 10, fontWeight: 800, padding: "2px 9px", borderRadius: 999,
                     border: `1px solid ${PART_COLORS[p]}`, color: PART_COLORS[p],
-                  }}>{PART_LABELS[p]}</span>
+                  }}>{PART_LABELS[lang][p]}</span>
                 ))}
               </div>
             </div>
             <p style={{ fontSize: 12, color: T.sub, margin: "0 0 14px", lineHeight: 1.7 }}>
-              種目の選択肢から消えるだけで、この種目で記録したトレーニングとキャラの成長は残ります。
+              {tx.delExNote}
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button onClick={() => setDeleteExTarget(null)}
                 style={{ padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                キャンセル
+                {tx.cancel}
               </button>
               <button onClick={() => { deleteCustomExercise(deleteExTarget.id); setDeleteExTarget(null); }}
                 style={{ padding: "12px", borderRadius: 10, border: "none", background: T.red, color: "#fff", fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                削除する
+                {tx.delBtn}
               </button>
             </div>
           </div>
@@ -1849,15 +2167,15 @@ export default function App() {
             display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
           }}>
           <div style={{ textAlign: "center", animation: "popIn 0.5s ease-out" }}>
-            <p style={{ color: T.yellow, fontWeight: 900, fontSize: 16, letterSpacing: 2, margin: "0 0 10px" }}>🏆 目標達成！称号獲得 🏆</p>
+            <p style={{ color: T.yellow, fontWeight: 900, fontSize: 16, letterSpacing: 2, margin: "0 0 10px" }}>{tx.celebTitle}</p>
             <p style={{
               color: "#fff", fontWeight: 900, fontSize: 28, lineHeight: 1.6, margin: 0,
               textShadow: `0 0 24px rgba(255,90,60,0.6), 3px 3px 0 ${T.red}`,
               animation: "shake 0.6s ease-in-out 0.5s 2",
             }}>
-              「{celebration}」
+              「{shoutText(celebration, lang)}」
             </p>
-            <p style={{ color: T.sub, fontSize: 13, marginTop: 22 }}>タップして閉じる</p>
+            <p style={{ color: T.sub, fontSize: 13, marginTop: 22 }}>{tx.tapClose}</p>
           </div>
         </div>
       )}
