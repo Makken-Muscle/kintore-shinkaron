@@ -896,17 +896,19 @@ export default function App() {
             transform: "rotate(2deg)", boxShadow: "2px 2px 0 #000", whiteSpace: "nowrap",
           }}>{STAGES[stageIdx].name}</span>
         </div>
-        {/* 掛け声ティッカー（黒地＋赤の上辺） */}
-        <div style={{ overflow: "hidden", background: "#000", borderTop: `2px solid ${T.red}`, padding: "5px 0" }}>
-          <div style={{ display: "flex", width: "max-content", animation: "marquee 40s linear infinite" }}>
-            {[0, 1].map((k) => (
-              <span key={k} aria-hidden={k === 1}
-                style={{ fontFamily: T.num, fontSize: 12, letterSpacing: 2.5, color: "#FFF2E0", whiteSpace: "nowrap", paddingRight: 24 }}>
-                {SHOUT_TITLES.map((s) => `★ ${s} `).join("")}
-              </span>
-            ))}
+        {/* 掛け声ティッカー（獲得した称号だけが流れる。増えるほど賑やかに） */}
+        {data.titles.length > 0 && (
+          <div style={{ overflow: "hidden", background: "#000", borderTop: `2px solid ${T.red}`, padding: "5px 0" }}>
+            <div style={{ display: "flex", width: "max-content", animation: `marquee ${Math.max(14, data.titles.length * 4)}s linear infinite` }}>
+              {[0, 1].map((k) => (
+                <span key={k} aria-hidden={k === 1}
+                  style={{ fontFamily: T.num, fontSize: 12, letterSpacing: 2.5, color: "#FFF2E0", whiteSpace: "nowrap", paddingRight: 24 }}>
+                  {data.titles.map((s) => `★ ${s} `).join("")}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
       <main style={{ maxWidth: 520, margin: "0 auto", padding: 16 }}>
