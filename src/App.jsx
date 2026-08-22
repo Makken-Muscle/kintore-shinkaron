@@ -29,6 +29,21 @@ const SHOUT_TITLES = [
   "デカイよ！他が見えない！",
   "筋肉のカーテンコールだ！",
   "背中でクリスマスツリー育ててんのかい！",
+  "二頭筋が自慢の腕時計だ！",
+  "三角筋が尖りすぎて危ない！",
+  "脚が太すぎてジーンズが泣いてる！",
+  "広背筋が翼みたいだ！",
+  "腹斜筋が迷路になってる！",
+  "僧帽筋がマウント富士だ！",
+  "前腕が太すぎて握手できない！",
+  "ラットがV字すぎて羨ましい！",
+  "スクワットの賜物、最高だ！",
+  "ベンチプレスの化身が来た！",
+  "デッドリフトで地面が震えた！",
+  "プロテインより筋肉が濃い！",
+  "鏡に映るのは筋肉だけ！",
+  "限界突破の形が見える！",
+  "筋肉が筋肉を呼んでる！",
 ];
 
 const EXERCISE_PRESETS = [
@@ -40,8 +55,8 @@ const HELI_KG = 2000; // ヘリコプター1機の重量目安（2t）
 
 // HPS 6週間プログラム（月:H 筋肥大 / 水:P パワー / 金:S 筋力）
 const DAY_TYPES = {
-  H: { key: "H", name: "筋肥大", color: "#FF5A3C", tip: "重量より「効かせる」意識。ネガティブ動作をゆっくり。" },
-  P: { key: "P", name: "パワー", color: "#3DDC97", tip: "全力スピードで爆発的に挙げる。潰れる手前で必ず止める。" },
+  H: { key: "H", name: "筋肥大", color: "#F05C3D", tip: "重量より「効かせる」意識。ネガティブ動作をゆっくり。" },
+  P: { key: "P", name: "パワー", color: "#3DC98B", tip: "全力スピードで爆発的に挙げる。潰れる手前で必ず止める。" },
   S: { key: "S", name: "筋力", color: "#5B9BFF", tip: "高重量ゾーン。ウォームアップとセーフティバーを忘れずに。" },
 };
 const HPS_PROGRAM = [
@@ -85,20 +100,36 @@ const CHARA_QUOTES = [
   "僧帽筋が喜んでる！", "超回復こそ正義！", "限界の1歩先へ！",
 ];
 
-// ============ デザイントークン ============
+// ============ デザイントークン（重厚版：金属背景 ＋ 落下の衝撃） ============
 const T = {
-  bg: "#0C0E14",
-  surface: "#171920",
-  surface2: "#21232B",
-  line: "#2B2E38",
-  ink: "#E9EAEF",
-  sub: "#A6A8B2",
-  red: "#FF5A3C",
-  yellow: "#FFC93C",
-  green: "#3DDC97",
+  bg: "#07080A",
+  pageGrad: "radial-gradient(120% 70% at 50% 0%,#16181D 0%,#0B0D10 55%,#07080A 100%)",
+  surface: "#15171B",
+  // ヘアライン金属パネル（走る光沢と組み合わせて使用）
+  panel: "linear-gradient(160deg,#23262B 0%,#15171B 42%,#0D0F12 100%)",
+  surface2: "#1A1D21",
+  surface3: "#22262B",
+  line: "#2E3238",
+  line2: "#3A3F46",
+  ink: "#F4F4F2",
+  sub: "#9AA1AA",
+  sub2: "#6E757E",
+  red: "#E4482A",
+  redBright: "#F05C3D",
+  redDeep: "#B9331A",
+  redContainer: "rgba(228,72,42,0.16)",
+  yellow: "#E8C33A",
+  yellowBright: "#FFDD6B",
+  green: "#3DC98B",
   blue: "#5B9BFF",
   body: "'Zen Kaku Gothic New', 'Hiragino Sans', sans-serif",
+  display: "'Dela Gothic One', 'Zen Kaku Gothic New', 'Hiragino Sans', sans-serif",
   num: "'Anton', 'Zen Kaku Gothic New', sans-serif",
+  cond: "'Barlow Condensed', sans-serif",
+  // 金属に彫り込んだ見出しの影
+  emboss: "0 2px 0 #0A0B0D, 0 3px 6px rgba(0,0,0,.6), 0 -1px 0 rgba(255,255,255,.1)",
+  // 凹んだトラック（バーの溝）
+  groove: "inset 0 1px 3px rgba(0,0,0,.8)",
 };
 
 // ============ ユーティリティ ============
@@ -145,7 +176,7 @@ async function storageSet(key, value) {
 // ============ 部位判定 ============
 const ALL_PARTS = ["chest", "shoulder", "arm", "back", "leg", "abs"];
 const PART_LABELS = { chest: "胸", shoulder: "肩", arm: "腕", back: "背中", leg: "脚", abs: "腹筋" };
-const PART_COLORS = { chest: "#FF5A3C", shoulder: "#FFC93C", arm: "#C77DFF", back: "#5B9BFF", leg: "#3DDC97", abs: "#7FE3F0" };
+const PART_COLORS = { chest: "#F05C3D", shoulder: "#E8C33A", arm: "#B478E6", back: "#5B9BFF", leg: "#3DC98B", abs: "#6FCEDC" };
 const PART_RULES = [
   { re: /デッド/, parts: [["back", 0.5], ["leg", 0.5]] },
   { re: /腹|クランチ|プランク|アブ|レッグレイズ/, parts: [["abs", 1]] },
@@ -239,13 +270,14 @@ function MuscleCharacter({ levels }) {
     <svg viewBox="0 0 200 240" style={{ width: "100%", maxWidth: 230, display: "block", margin: "0 auto" }}>
       <defs>
         <radialGradient id="spot" cx="50%" cy="30%" r="75%">
-          <stop offset="0%" stopColor="#3A4152" />
-          <stop offset="100%" stopColor="#1C1F27" />
+          <stop offset="0%" stopColor="#262A30" />
+          <stop offset="55%" stopColor="#121417" />
+          <stop offset="100%" stopColor="#0A0B0D" />
         </radialGradient>
       </defs>
-      <rect x="0" y="0" width="200" height="240" rx="16" fill="url(#spot)" />
-      <polygon points="70,0 130,0 168,215 32,215" fill="#FFC93C" opacity="0.07" />
-      <rect x="14" y="212" width="172" height="4" rx="2" fill="#0D0F13" />
+      <rect x="0" y="0" width="200" height="240" fill="url(#spot)" />
+      <polygon points="70,0 130,0 168,215 32,215" fill="#E8C33A" opacity="0.06" />
+      <rect x="14" y="212" width="172" height="4" fill="#08090A" />
       <ellipse cx="100" cy="216" rx={40 + (shoulder + leg) * 14} ry="7" fill="rgba(0,0,0,0.5)" />
 
       {/* 脚（大腿→膝→ふくらはぎの自然なライン） */}
@@ -279,7 +311,7 @@ function MuscleCharacter({ levels }) {
       />
 
       {/* 短パン */}
-      <path d={`M ${cx - hipW / 2} 137 Q ${cx} 141 ${cx + hipW / 2} 137 L ${cx + hipW / 2 + 2} 160 Q ${cx + hipW * 0.25} 164 ${cx + 3} 161 L ${cx} 153 L ${cx - 3} 161 Q ${cx - hipW * 0.25} 164 ${cx - hipW / 2 - 2} 160 Z`} fill="#FF5A3C" />
+      <path d={`M ${cx - hipW / 2} 137 Q ${cx} 141 ${cx + hipW / 2} 137 L ${cx + hipW / 2 + 2} 160 Q ${cx + hipW * 0.25} 164 ${cx + 3} 161 L ${cx} 153 L ${cx - 3} 161 Q ${cx - hipW * 0.25} 164 ${cx - hipW / 2 - 2} 160 Z`} fill="#E4482A" />
 
       {/* 大胸筋（下縁の影つき） */}
       {chest > 0.15 && (
@@ -337,7 +369,7 @@ function MuscleCharacter({ levels }) {
       )}
       <path d={`M ${cx - 4 - mAvg * 3} ${52 + (1 - mAvg) * 2} Q ${cx} ${55 + mAvg * 3} ${cx + 4 + mAvg * 3} ${52 + (1 - mAvg) * 2}`} stroke="#17181C" strokeWidth="1.8" fill="none" strokeLinecap="round" />
       {mAvg > 0.65 && (
-        <g fill="#FFC93C">
+        <g fill="#E8C33A">
           <path d="M 30 60 l 3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3 Z" />
           <path d="M 168 90 l 2.5 6 6 2.5 -6 2.5 -2.5 6 -2.5 -6 -6 -2.5 6 -2.5 Z" />
         </g>
@@ -347,71 +379,77 @@ function MuscleCharacter({ levels }) {
 }
 
 // ============ 軽トラSVG ============
-const RARE_TRUCK_COLORS = ["#FF5A3C", "#FFC93C", "#3DDC97", "#5B9BFF", "#C77DFF", "#FF7BAC", "#7FE3F0"];
+const RARE_TRUCK_COLORS = ["#E4482A", "#E8C33A", "#3DC98B", "#4E8CE8", "#B478E6", "#E87BA0", "#6FCEDC"];
 // 台ごとに固定の疑似乱数で、約10台に1台だけレアカラーに
 const truckColor = (i) => {
   const h = ((i + 1) * 92821 + 4271) % 997;
-  if (h % 10 !== 0) return "#F2F4F7";
+  if (h % 10 !== 0) return "#D9DCE0";
   return RARE_TRUCK_COLORS[Math.floor(h / 10) % RARE_TRUCK_COLORS.length];
 };
 
-function KeiTruck({ size = 56, color = "#F2F4F7" }) {
+function KeiTruck({ size = 56, color = "#D9DCE0" }) {
   return (
-    <svg viewBox="0 0 64 38" width={size} height={(size * 38) / 64} style={{ display: "block" }}>
+    <svg viewBox="0 0 64 38" width={size} height={(size * 38) / 64} style={{ display: "block", filter: "drop-shadow(0 3px 4px rgba(0,0,0,.7))" }}>
       {/* 荷台 */}
-      <rect x="2" y="13" width="38" height="12" rx="1.5" fill={color} />
-      <rect x="2" y="13" width="38" height="3" fill="rgba(0,0,0,0.22)" />
+      <rect x="2" y="13" width="38" height="12" rx="1" fill={color} />
+      <rect x="2" y="13" width="38" height="3.5" fill="rgba(0,0,0,0.28)" />
       {/* キャビン */}
       <path d="M 40 25 L 40 8 Q 40 6 42 6 L 54 6 Q 56 6 57 8 L 61 15 Q 62 16.5 62 18 L 62 25 Z" fill={color} />
-      <path d="M 43 9 L 53 9 L 57 15 L 43 15 Z" fill="#5B9BFF" opacity="0.85" />
+      <path d="M 43 9 L 53 9 L 57 15 L 43 15 Z" fill="#39404A" opacity="0.92" />
       {/* シャーシ */}
-      <rect x="2" y="25" width="60" height="4" rx="1" fill="#3A4152" />
+      <rect x="2" y="25" width="60" height="4" rx="1" fill="#2C3036" />
       {/* タイヤ */}
-      <circle cx="14" cy="30" r="6" fill="#0D0F13" />
-      <circle cx="14" cy="30" r="2.4" fill="#9AA3B5" />
-      <circle cx="50" cy="30" r="6" fill="#0D0F13" />
-      <circle cx="50" cy="30" r="2.4" fill="#9AA3B5" />
+      <circle cx="14" cy="30" r="6" fill="#08090A" />
+      <circle cx="14" cy="30" r="2.4" fill="#7C838C" />
+      <circle cx="50" cy="30" r="6" fill="#08090A" />
+      <circle cx="50" cy="30" r="2.4" fill="#7C838C" />
       {/* ライト */}
-      <rect x="60" y="19" width="2.5" height="3.5" rx="1" fill="#FFC93C" />
+      <rect x="60" y="19" width="2.5" height="3.5" rx="1" fill="#E8C33A" />
     </svg>
   );
 }
 
-function Heli({ size = 56, color = "#F2F4F7" }) {
+function Heli({ size = 56, color = "#D9DCE0" }) {
   return (
-    <svg viewBox="0 0 64 38" width={size} height={(size * 38) / 64} style={{ display: "block" }}>
+    <svg viewBox="0 0 64 38" width={size} height={(size * 38) / 64} style={{ display: "block", filter: "drop-shadow(0 3px 4px rgba(0,0,0,.7))" }}>
       {/* メインローター */}
-      <line x1="3" y1="5" x2="51" y2="5" stroke="#9AA3B5" strokeWidth="2" strokeLinecap="round" />
-      <rect x="25" y="5" width="4" height="5" rx="1" fill="#3A4152" />
+      <line x1="3" y1="5" x2="51" y2="5" stroke="#7C838C" strokeWidth="2" strokeLinecap="round" />
+      <rect x="25" y="5" width="4" height="5" rx="1" fill="#2C3036" />
       {/* テールブーム */}
       <path d="M 38 16 L 58 14.5 L 58 18.5 L 38 21 Z" fill={color} />
-      <rect x="56.5" y="7" width="2.5" height="9" rx="1" fill="#9AA3B5" />
+      <rect x="56.5" y="7" width="2.5" height="9" rx="1" fill="#7C838C" />
       {/* 機体 */}
       <ellipse cx="26" cy="18.5" rx="15" ry="8.5" fill={color} />
-      <path d="M 32 12 Q 39.5 13.5 40.5 18.5 L 32 18.5 Z" fill="#5B9BFF" opacity="0.85" />
+      <path d="M 32 12 Q 39.5 13.5 40.5 18.5 L 32 18.5 Z" fill="#39404A" opacity="0.92" />
       {/* スキッド */}
-      <line x1="15" y1="26" x2="17" y2="31" stroke="#3A4152" strokeWidth="2" />
-      <line x1="34" y1="26" x2="36" y2="31" stroke="#3A4152" strokeWidth="2" />
-      <line x1="12" y1="31.5" x2="41" y2="31.5" stroke="#3A4152" strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="15" y1="26" x2="17" y2="31" stroke="#2C3036" strokeWidth="2" />
+      <line x1="34" y1="26" x2="36" y2="31" stroke="#2C3036" strokeWidth="2" />
+      <line x1="12" y1="31.5" x2="41" y2="31.5" stroke="#2C3036" strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   );
 }
-// ============ 共通スタイル ============
+// ============ 共通スタイル（重厚メタル） ============
 const cardStyle = {
-  background: T.surface, borderRadius: 16, padding: 16,
+  background: T.panel, borderRadius: 4, padding: 18,
   border: `1px solid ${T.line}`,
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,.05), 0 2px 4px rgba(0,0,0,.5), 0 12px 28px rgba(0,0,0,.35)",
 };
 const inputStyle = {
-  width: "100%", padding: "11px 12px", borderRadius: 10,
-  border: `1.5px solid ${T.line}`, fontSize: 16, fontFamily: T.body,
+  width: "100%", padding: "14px 14px", borderRadius: 4,
+  border: `1px solid ${T.line2}`, fontSize: 16, fontFamily: T.body,
   background: T.surface2, color: T.ink, boxSizing: "border-box", outline: "none",
+  boxShadow: T.groove,
+  transition: "border-color 0.15s ease, box-shadow 0.15s ease",
 };
-const h2Style = { fontSize: 17, fontWeight: 800, margin: 0, letterSpacing: 0.5, color: T.ink };
+// 見出し（金属に彫り込んだ表示フォント）
+const h2Style = { fontFamily: T.display, fontSize: 15, fontWeight: 400, margin: 0, letterSpacing: 0.8, color: T.ink };
+// 一次アクション（赤の3Dプレートボタン）
 const primaryBtn = (disabled) => ({
-  padding: "13px", borderRadius: 12, border: "none",
-  background: disabled ? "#3A3F4C" : `linear-gradient(135deg, ${T.red}, #E03418)`,
-  color: "#fff", fontFamily: T.body, fontWeight: 800, fontSize: 16,
-  letterSpacing: 1, boxShadow: disabled ? "none" : "0 4px 14px rgba(255,90,60,0.35)",
+  padding: "15px 24px", borderRadius: 4, border: "none",
+  borderBottom: disabled ? "3px solid #202226" : `3px solid ${T.redDeep}`,
+  background: disabled ? "#22252A" : `linear-gradient(180deg, ${T.redBright}, ${T.redDeep})`,
+  color: disabled ? "#6A6F79" : "#fff", fontFamily: T.display, fontWeight: 400, fontSize: 14.5,
+  letterSpacing: 1.5, boxShadow: disabled ? "none" : "0 4px 14px rgba(240,92,61,0.34)",
 });
 
 // ============ メイン ============
@@ -439,6 +477,7 @@ export default function App() {
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [bubble, setBubble] = useState(null);
   const bubbleTimer = useRef(null);
+  const quakeRef = useRef({ last: 0, timer: null }); // 着地の衝撃で画面全体を揺らす
   const [upgradeConfirm, setUpgradeConfirm] = useState(false);
   const [prCelebration, setPrCelebration] = useState(null); // { exercise, from, to }
   const [timer, setTimer] = useState({ total: 180, left: 180, running: false, endAt: null });
@@ -753,9 +792,43 @@ export default function App() {
     return { rows, overflow: truckCount - shown };
   }, [truckCount]);
 
+  // ---- 軽トラ着地の衝撃で画面全体を揺らす ----
+  const screenQuake = () => {
+    const b = document.body;
+    if (!b) return;
+    const now = Date.now();
+    if (now - quakeRef.current.last < 130) return; // 連続着地はスロットル
+    quakeRef.current.last = now;
+    b.style.animation = "none";
+    void b.offsetHeight; // リフローで確実に再生させる
+    b.style.willChange = "transform";
+    b.style.animation = "quake .45s cubic-bezier(.2,.8,.3,1) both";
+    clearTimeout(quakeRef.current.timer);
+    quakeRef.current.timer = setTimeout(() => { b.style.animation = ""; b.style.willChange = ""; }, 520);
+  };
+
+  // 軽トラ／ヘリタブを開くたび、各台の着地の瞬間に画面を揺らす（落下アニメの遅延と同期）
+  useEffect(() => {
+    if (tab !== "truck") return;
+    const shown = Math.min(truckCount, 100);
+    if (shown === 0) return;
+    const q = quakeRef.current;
+    const timers = [];
+    for (let i = 0; i < shown; i++) {
+      const delay = Math.min(i, 40) * 0.07; // 落下の stagger と一致
+      timers.push(setTimeout(screenQuake, (delay + 0.66) * 1000)); // 着地の瞬間
+    }
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(q.timer);
+      document.body.style.animation = "";
+      document.body.style.willChange = "";
+    };
+  }, [tab, truckCount]); // eslint-disable-line
+
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg, color: T.sub, fontFamily: T.body }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.pageGrad, color: T.sub, fontFamily: T.body }}>
         <p>読み込み中…💪</p>
       </div>
     );
@@ -771,45 +844,68 @@ export default function App() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: T.body, color: T.ink, paddingBottom: 92 }}>
+    <div style={{ minHeight: "100vh", background: T.pageGrad, fontFamily: T.body, color: T.ink, paddingBottom: 92 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Anton&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0..1,0&icon_names=calendar_month,edit_note,exercise,helicopter,local_shipping,settings,trophy&display=block');
+        @import url('https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700&family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0..1,0&icon_names=calendar_month,date_range,edit_note,exercise,fitness_center,helicopter,local_fire_department,local_shipping,settings,timer,trophy&display=block');
         /* Viteテンプレートやブラウザ標準の余白・背景を打ち消す（スマホの白枠対策） */
-        html, body { margin: 0 !important; padding: 0 !important; background: #0C0E14 !important; }
+        html, body { margin: 0 !important; padding: 0 !important; background: #07080A !important; }
+        body { overflow-x: hidden; }
+        #root { max-width: none !important; margin: 0 !important; padding: 0 !important; text-align: initial !important; }
         .msym { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr; -webkit-font-smoothing: antialiased; font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
         .msym.on { font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24; }
-        #root { max-width: none !important; margin: 0 !important; padding: 0 !important; text-align: initial !important; }
         @keyframes popIn { 0% { transform: scale(0.3) rotate(-8deg); opacity: 0; } 70% { transform: scale(1.1) rotate(2deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
         @keyframes shake { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-2.5deg); } 75% { transform: rotate(2.5deg); } }
-        @keyframes fallIn { 0% { transform: translateY(-340px); opacity: 0; } 12% { opacity: 1; } 68% { transform: translateY(0); } 80% { transform: translateY(-13px); } 90% { transform: translateY(0); } 95% { transform: translateY(-4px); } 100% { transform: translateY(0); opacity: 1; } }
         @keyframes fadeUp { 0% { opacity: 0; transform: translateY(14px); } 100% { opacity: 1; transform: translateY(0); } }
+        /* 軽トラ落下（重厚な着地＋潰れ／土埃／砂利／画面全体の揺れ） */
+        @keyframes fallHeavy { 0% { transform: translateY(-420px) scaleY(1.14) scaleX(.9); opacity: 0; } 10% { opacity: 1; } 58% { transform: translateY(0) scaleY(1.1) scaleX(.94); animation-timing-function: cubic-bezier(.2,0,.5,1); } 64% { transform: translateY(2px) scaleY(.74) scaleX(1.16); } 72% { transform: translateY(-7px) scaleY(1.06) scaleX(.97); } 80% { transform: translateY(0) scaleY(.9) scaleX(1.06); } 88% { transform: translateY(-2px) scaleY(1.02); } 100% { transform: translateY(0) scale(1); } }
+        @keyframes thud { 0%,54% { transform: translate(0,0); } 58% { transform: translate(1.5px,3px); } 62% { transform: translate(-1.5px,-1px); } 66% { transform: translate(1px,1.5px); } 72% { transform: translate(0,0); } 100% { transform: translate(0,0); } }
+        @keyframes dustPuff { 0%,55% { opacity: 0; transform: translateX(0) scale(.3); } 60% { opacity: .75; } 100% { opacity: 0; transform: translateX(var(--dx,14px)) translateY(-7px) scale(2.5); } }
+        @keyframes grit { 0%,56% { opacity: 0; transform: translate(0,0) scale(1); } 60% { opacity: .9; } 100% { opacity: 0; transform: translate(var(--dx,16px), -18px) scale(.5); } }
+        @keyframes quake { 0% { transform: translate(0,0); } 12% { transform: translate(-3px,4px) rotate(-.18deg); } 26% { transform: translate(4px,-3px) rotate(.18deg); } 40% { transform: translate(-3px,2px); } 55% { transform: translate(2.5px,-2px) rotate(-.1deg); } 70% { transform: translate(-1.5px,1.5px); } 85% { transform: translate(1px,-1px); } 100% { transform: translate(0,0); } }
+        /* 成長バー・掛け声ティッカー */
+        @keyframes barFill { from { width: 0; } }
+        @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         button { cursor: pointer; }
-        input:focus, select:focus { border-color: #FF5A3C !important; }
-        select option { background: #21232B; color: #E9EAEF; }
+        input:focus, select:focus { border-color: #E4482A !important; box-shadow: inset 0 1px 3px rgba(0,0,0,.8), 0 0 0 2px rgba(228,72,42,.25) !important; }
+        select option { background: #1A1D21; color: #F4F4F2; }
         @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
       `}</style>
 
-      {/* ヘッダー */}
-      <header style={{
-        background: `linear-gradient(180deg, #171920, #0F1118)`,
-        padding: "16px 16px 12px", borderBottom: `1px solid ${T.line}`,
-        position: "sticky", top: 0, zIndex: 30,
-      }}>
-        <div style={{ maxWidth: 520, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 8, height: 30, background: T.red, borderRadius: 3 }} />
-            <div>
-              <h1 style={{ fontSize: 19, fontWeight: 900, margin: 0, letterSpacing: 2 }}>筋トレ進化論</h1>
-              <p style={{ margin: 0, fontSize: 10, color: T.sub, letterSpacing: 3 }}>MUSCLE EVOLUTION LOG</p>
+      {/* ヘッダー（スタンプ調：傾いた赤ロゴ＋金バッジ＋掛け声ティッカー） */}
+      <header style={{ position: "sticky", top: 0, zIndex: 30, background: T.bg, borderBottom: `2px solid ${T.line}` }}>
+        <div style={{ maxWidth: 520, margin: "0 auto", padding: "12px 16px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          {/* 左：ロゴ＋タイトル */}
+          <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
+            <div style={{
+              width: 38, height: 38, flex: "none",
+              background: T.red, display: "flex", alignItems: "center", justifyContent: "center",
+              transform: "rotate(-4deg)", boxShadow: "3px 3px 0 #000",
+            }}>
+              <span style={{ fontFamily: T.num, fontSize: 22, color: "#fff", lineHeight: 1, letterSpacing: -1 }}>筋</span>
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <h1 style={{ margin: 0, fontFamily: T.display, fontWeight: 400, fontSize: 19, lineHeight: 1.1, letterSpacing: 0.5, color: T.ink }}>筋トレ進化論</h1>
+              <p style={{ margin: "2px 0 0", fontFamily: T.num, fontSize: 10, letterSpacing: 3.5, color: T.sub2, lineHeight: 1 }}>MUSCLE EVOLUTION</p>
             </div>
           </div>
+          {/* 右：ステージバッジ（傾いた金スタンプ） */}
           <span style={{
-            background: T.surface2, color: T.yellow, border: `1px solid ${T.line}`,
-            fontSize: 12, fontWeight: 800, padding: "5px 12px", borderRadius: 999,
-          }}>
-            {STAGES[stageIdx].name}
-          </span>
+            flex: "none", fontFamily: T.display, fontWeight: 400, fontSize: 11,
+            padding: "7px 10px", background: T.yellow, color: "#17140A",
+            transform: "rotate(2deg)", boxShadow: "2px 2px 0 #000", whiteSpace: "nowrap",
+          }}>{STAGES[stageIdx].name}</span>
+        </div>
+        {/* 掛け声ティッカー（黒地＋赤の上辺） */}
+        <div style={{ overflow: "hidden", background: "#000", borderTop: `2px solid ${T.red}`, padding: "5px 0" }}>
+          <div style={{ display: "flex", width: "max-content", animation: "marquee 40s linear infinite" }}>
+            {[0, 1].map((k) => (
+              <span key={k} aria-hidden={k === 1}
+                style={{ fontFamily: T.num, fontSize: 12, letterSpacing: 2.5, color: "#FFF2E0", whiteSpace: "nowrap", paddingRight: 24 }}>
+                {SHOUT_TITLES.map((s) => `★ ${s} `).join("")}
+              </span>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -820,7 +916,7 @@ export default function App() {
             {/* ストリーク＆今週 */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <section style={{ ...cardStyle, padding: "12px 14px", textAlign: "center" }}>
-                <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1 }}>🔥 ストリーク</p>
+                <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><span className="msym" style={{ fontSize: 15, color: T.red }}>local_fire_department</span>ストリーク</p>
                 <p style={{ margin: "2px 0 0" }}>
                   <span style={{ fontFamily: T.num, fontSize: 30, color: streak > 0 ? T.yellow : T.sub }}>{streak}</span>
                   <span style={{ fontSize: 13, marginLeft: 3 }}>回連続</span>
@@ -828,7 +924,7 @@ export default function App() {
                 <p style={{ margin: "2px 0 0", fontSize: 10, color: T.sub }}>中2日以内なら継続</p>
               </section>
               <section style={{ ...cardStyle, padding: "12px 14px", textAlign: "center" }}>
-                <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1 }}>📅 今週</p>
+                <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><span className="msym" style={{ fontSize: 15, color: T.blue }}>date_range</span>今週</p>
                 <p style={{ margin: "2px 0 0" }}>
                   <span style={{ fontFamily: T.num, fontSize: 30 }}>{weekCount}</span>
                   <span style={{ fontSize: 13, marginLeft: 3 }}>日</span>
@@ -840,7 +936,7 @@ export default function App() {
             {/* インターバルタイマー */}
             <section style={{ ...cardStyle, borderLeft: timer.running ? `5px solid ${T.green}` : `5px solid ${T.line}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ ...h2Style, fontSize: 15 }}>⏱ インターバルタイマー</h3>
+                <h3 style={{ ...h2Style, fontSize: 15, display: "flex", alignItems: "center", gap: 6 }}><span className="msym" style={{ fontSize: 19, color: T.green }}>timer</span>インターバルタイマー</h3>
                 <span style={{
                   fontFamily: T.num, fontSize: 34, letterSpacing: 1,
                   color: timer.running ? T.green : timer.left === 0 ? T.red : T.ink,
@@ -848,7 +944,7 @@ export default function App() {
                   {fmtTime(timer.left)}
                 </span>
               </div>
-              <div style={{ height: 8, background: T.surface2, borderRadius: 999, overflow: "hidden", margin: "10px 0" }}>
+              <div style={{ height: 8, background: T.surface2, borderRadius: 999, overflow: "hidden", boxShadow: T.groove, margin: "10px 0" }}>
                 <div style={{
                   height: "100%", borderRadius: 999, transition: "width 0.25s linear",
                   background: `linear-gradient(90deg, ${T.green}, ${T.blue})`,
@@ -898,7 +994,7 @@ export default function App() {
             </section>
 
             <section style={cardStyle}>
-              <h2 style={h2Style}>今日のトレーニングを記録</h2>
+              <h2 style={{ ...h2Style, display: "flex", alignItems: "center", gap: 8 }}><span className="msym" style={{ fontSize: 20, color: T.red }}>fitness_center</span>今日のトレーニングを記録</h2>
               <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
                 <select value={exercise} onChange={(e) => { setExercise(e.target.value); setExMsg(null); }} style={inputStyle}>
                   <optgroup label="基本種目">
@@ -1057,11 +1153,13 @@ export default function App() {
                   }} />
                 </div>
               )}
-              <MuscleCharacter levels={partLevels} />
+              {/* 背景の巨大アウトライン文字 */}
+              <p style={{ position: "absolute", top: 14, left: 0, right: 0, margin: 0, textAlign: "center", fontFamily: T.num, fontSize: 76, lineHeight: 1, color: "transparent", WebkitTextStroke: "1px #343940", letterSpacing: 3, pointerEvents: "none" }}>MACHO</p>
+              <div style={{ position: "relative" }}><MuscleCharacter levels={partLevels} /></div>
               <div style={{ textAlign: "center", padding: "12px 16px 16px" }}>
-                <h2 style={{ fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: 2 }}>{STAGES[stageIdx].name}</h2>
-                <p style={{ margin: "4px 0 0", fontSize: 13, color: T.sub }}>{STAGES[stageIdx].desc}</p>
-                <p style={{ margin: "8px 0 0", fontSize: 11, color: "#555C6E" }}>👆 タップすると喋ります</p>
+                <h2 style={{ fontFamily: T.display, fontSize: 26, fontWeight: 400, margin: 0, letterSpacing: 1, color: T.ink, textShadow: T.emboss }}>{STAGES[stageIdx].name}</h2>
+                <p style={{ margin: "6px 0 0", fontSize: 13, color: T.sub }}>{STAGES[stageIdx].desc}</p>
+                <p style={{ margin: "8px 0 0", fontSize: 11, color: T.sub2 }}>👆 タップすると喋ります</p>
               </div>
             </section>
 
@@ -1072,7 +1170,7 @@ export default function App() {
                 </span>
                 {nextStage && <span style={{ fontSize: 12, color: T.red, fontWeight: 800 }}>進化まであと{nextStage.days - uniqueDays}日</span>}
               </div>
-              <div style={{ height: 12, background: T.surface2, borderRadius: 999, overflow: "hidden" }}>
+              <div style={{ height: 12, background: T.surface2, borderRadius: 999, overflow: "hidden", boxShadow: T.groove }}>
                 <div style={{
                   height: "100%", borderRadius: 999,
                   background: `linear-gradient(90deg, ${T.red}, ${T.yellow})`, transition: "width 0.6s",
@@ -1088,14 +1186,14 @@ export default function App() {
               <p style={{ fontSize: 12, color: T.sub, margin: "0 0 12px" }}>
                 記録した種目の部位だけが育ちます。偏るとキャラも偏った体型に…！
               </p>
-              <div style={{ display: "grid", gap: 9 }}>
-                {ALL_PARTS.map((p) => (
+              <div style={{ display: "grid", gap: 11 }}>
+                {ALL_PARTS.map((p, i) => (
                   <div key={p} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ width: 38, fontSize: 12, fontWeight: 800, color: T.ink }}>{PART_LABELS[p]}</span>
-                    <div style={{ flex: 1, height: 9, background: T.surface2, borderRadius: 999, overflow: "hidden" }}>
-                      <div style={{ height: "100%", borderRadius: 999, background: PART_COLORS[p], width: `${Math.round(partLevels[p] * 100)}%`, transition: "width 0.6s" }} />
+                    <span style={{ width: 38, fontFamily: T.display, fontSize: 13, fontWeight: 400, color: T.ink }}>{PART_LABELS[p]}</span>
+                    <div style={{ flex: 1, height: 13, background: T.surface2, borderRadius: 2, overflow: "hidden", boxShadow: T.groove }}>
+                      <div style={{ height: "100%", background: PART_COLORS[p], width: `${Math.round(partLevels[p] * 100)}%`, boxShadow: `0 0 12px ${PART_COLORS[p]}66`, transition: "width 0.6s", animation: "barFill 1s cubic-bezier(.2,.8,.2,1) both", animationDelay: `${i * 0.08}s` }} />
                     </div>
-                    <span style={{ width: 38, textAlign: "right", fontFamily: T.num, fontSize: 13, color: T.sub }}>{Math.round(partLevels[p] * 100)}%</span>
+                    <span style={{ width: 34, textAlign: "right", fontFamily: T.num, fontSize: 16, color: T.ink }}>{Math.round(partLevels[p] * 100)}</span>
                   </div>
                 ))}
               </div>
@@ -1109,11 +1207,16 @@ export default function App() {
                 </p>
               ) : (
                 <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
-                  {data.titles.map((t) => (
+                  {data.titles.map((t, i) => (
                     <div key={t} style={{
-                      background: T.surface2, color: T.yellow, fontWeight: 800, fontSize: 14,
-                      padding: "11px 14px", borderRadius: 10, borderLeft: `5px solid ${T.red}`,
-                    }}>「{t}」</div>
+                      display: "flex", alignItems: "center", gap: 12,
+                      background: "linear-gradient(180deg,#1A1D21,#121417)",
+                      border: `1px solid ${T.line}`, borderLeft: `4px solid ${T.red}`,
+                      padding: 12, borderRadius: 2,
+                    }}>
+                      <span style={{ fontFamily: T.num, fontSize: 17, color: T.sub2 }}>{String(i + 1).padStart(2, "0")}</span>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 900, color: T.yellow, lineHeight: 1.6 }}>{t}</span>
+                    </div>
                   ))}
                 </div>
               )}
@@ -1147,15 +1250,17 @@ export default function App() {
               )}
 
               <section style={{ ...cardStyle, textAlign: "center" }}>
-                <p style={{ margin: 0, fontSize: 12, color: T.sub, fontWeight: 700, letterSpacing: 2 }}>
-                  {isHeli ? "ヘリ換算の挙上量" : "総挙上量"}
+                <p style={{ margin: 0, fontFamily: T.cond, fontWeight: 700, fontSize: 11, color: T.sub, letterSpacing: 4 }}>
+                  {isHeli ? "HELI CONVERTED VOLUME" : "TOTAL LIFTED VOLUME"}
                 </p>
-                <p style={{ fontFamily: T.num, fontSize: 44, margin: "2px 0 0", letterSpacing: 1 }}>
-                  {vehicleVolume.toLocaleString()}<span style={{ fontSize: 18, marginLeft: 4 }}>kg</span>
+                <p style={{ fontFamily: T.num, fontSize: 54, margin: "4px 0 0", lineHeight: 1, color: T.ink, textShadow: "0 4px 0 #0A0B0D,0 6px 18px rgba(0,0,0,.8)" }}>
+                  {vehicleVolume.toLocaleString()}<span style={{ fontFamily: T.cond, fontWeight: 700, fontSize: 18, letterSpacing: 2, color: T.sub, marginLeft: 6 }}>KG</span>
                 </p>
-                <p style={{ margin: "6px 0 0", fontSize: 14, fontWeight: 700 }}>
-                  = {vName}（{vSpec}）<span style={{ fontFamily: T.num, fontSize: 26, color: T.yellow, margin: "0 4px" }}>{truckCount}</span>{vUnit}分！
-                </p>
+                <div style={{ marginTop: 14, display: "inline-flex", alignItems: "center", gap: 10, background: "linear-gradient(180deg,#2A2E34,#15181C)", border: `1px solid ${T.line2}`, padding: "10px 15px", borderRadius: 3, boxShadow: "inset 0 1px 0 rgba(255,255,255,.16),0 4px 12px rgba(0,0,0,.6)" }}>
+                  <span style={{ fontFamily: T.display, fontSize: 12, color: T.sub }}>{vName}（{vSpec}）×</span>
+                  <span style={{ fontFamily: T.num, fontSize: 34, lineHeight: 0.85, color: T.yellow, textShadow: "0 0 18px rgba(232,195,58,.45)" }}>{truckCount}</span>
+                  <span style={{ fontFamily: T.display, fontSize: 12, color: T.sub }}>{vUnit}</span>
+                </div>
                 {isHeli && (
                   <p style={{ margin: "8px 0 0", fontSize: 11, color: T.sub }}>
                     🛻 軽トラ時代を含む累計：{totalVolume.toLocaleString()}kg
@@ -1168,7 +1273,7 @@ export default function App() {
                   <span>次の1{vUnit}まで</span>
                   <span style={{ color: T.ink }}>あと <span style={{ fontFamily: T.num, fontSize: 15, color: T.green }}>{(unitKg - truckRemainder).toLocaleString()}</span> kg</span>
                 </div>
-                <div style={{ height: 12, background: T.surface2, borderRadius: 999, overflow: "hidden" }}>
+                <div style={{ height: 12, background: T.surface2, borderRadius: 999, overflow: "hidden", boxShadow: T.groove }}>
                   <div style={{ height: "100%", width: `${(truckRemainder / unitKg) * 100}%`, background: `linear-gradient(90deg, ${T.green}, ${T.blue})`, borderRadius: 999, transition: "width 0.6s" }} />
                 </div>
               </section>
@@ -1197,19 +1302,33 @@ export default function App() {
                         <div key={i} style={{ display: "flex", justifyContent: "center", gap: 4, marginTop: i === 0 ? 0 : -6 }}>
                           {Array.from({ length: n }).map((_, j) => {
                             const globalIdx = below + j;
+                            const delay = `${Math.min(globalIdx, 40) * 0.07}s`;
                             return (
                               <div key={j} style={{
-                                animation: "fallIn 0.6s cubic-bezier(0.5, 0, 0.7, 0.4) both",
-                                animationDelay: `${Math.min(globalIdx, 40) * 0.07}s`,
+                                position: "relative", transformOrigin: "50% 100%",
+                                animation: "fallHeavy 1.15s cubic-bezier(.55,0,.85,.25) both",
+                                animationDelay: delay,
                               }}>
-                                <Vehicle size={52} color={truckColor(globalIdx + truckPile.overflow)} />
+                                {/* 着地の土埃・砂利 */}
+                                <div style={{ position: "absolute", left: -14, right: -14, bottom: -2, height: 22, pointerEvents: "none", overflow: "visible" }}>
+                                  <div style={{ position: "absolute", left: 2, bottom: 0, width: 20, height: 20, borderRadius: "50%", background: "radial-gradient(circle at 60% 70%, rgba(190,168,130,.55), rgba(190,168,130,0) 70%)", "--dx": "-16px", animation: "dustPuff 1.15s ease-out both", animationDelay: delay }} />
+                                  <div style={{ position: "absolute", right: 2, bottom: 0, width: 22, height: 22, borderRadius: "50%", background: "radial-gradient(circle at 40% 70%, rgba(190,168,130,.5), rgba(190,168,130,0) 70%)", "--dx": "18px", animation: "dustPuff 1.15s ease-out both", animationDelay: delay }} />
+                                  <div style={{ position: "absolute", left: "50%", bottom: 1, width: 26, height: 14, marginLeft: -13, borderRadius: "50%", background: "radial-gradient(circle at 50% 80%, rgba(210,190,150,.45), rgba(210,190,150,0) 72%)", "--dx": "0px", animation: "dustPuff 1.15s ease-out both", animationDelay: delay }} />
+                                  <div style={{ position: "absolute", left: 8, bottom: 2, width: 2.5, height: 2.5, background: "rgba(206,186,148,.9)", "--dx": "-20px", animation: "grit 1.15s ease-out both", animationDelay: delay }} />
+                                  <div style={{ position: "absolute", right: 10, bottom: 3, width: 2, height: 2, background: "rgba(206,186,148,.85)", "--dx": "22px", animation: "grit 1.15s ease-out both", animationDelay: delay }} />
+                                  <div style={{ position: "absolute", left: "50%", bottom: 4, width: 2, height: 2, background: "rgba(206,186,148,.8)", "--dx": "6px", animation: "grit 1.15s ease-out both", animationDelay: delay }} />
+                                </div>
+                                {/* 着地の揺れ戻り */}
+                                <div style={{ animation: "thud 1.15s linear both", animationDelay: delay }}>
+                                  <Vehicle size={52} color={truckColor(globalIdx + truckPile.overflow)} />
+                                </div>
                               </div>
                             );
                           })}
                         </div>
                       );
                     })}
-                    <div style={{ height: 5, background: "#0D0F13", borderRadius: 3, margin: "2px 8px 0" }} />
+                    <div style={{ height: 9, margin: "2px 8px 0", background: "repeating-linear-gradient(135deg,#E8C33A 0 9px,#0A0B0D 9px 18px)", opacity: 0.5 }} />
                     <p style={{ textAlign: "center", fontSize: 12, color: T.sub, margin: "10px 0 0" }}>
                       {isHeli
                         ? `あなたはヘリコプター${truckCount}機分の鉄を持ち上げました 🚁`
@@ -1364,7 +1483,7 @@ export default function App() {
                   <span style={{ fontFamily: T.num, fontSize: 46 }}>{goalDaysCount}</span>
                   <span style={{ fontSize: 16, color: T.sub }}> / {data.goal.target}日</span>
                 </p>
-                <div style={{ height: 14, background: T.surface2, borderRadius: 999, overflow: "hidden" }}>
+                <div style={{ height: 14, background: T.surface2, borderRadius: 999, overflow: "hidden", boxShadow: T.groove }}>
                   <div style={{
                     height: "100%", borderRadius: 999, transition: "width 0.6s",
                     background: data.goal.rewarded ? T.green : `linear-gradient(90deg, ${T.red}, ${T.yellow})`,
@@ -1741,37 +1860,43 @@ export default function App() {
         </div>
       )}
 
-      {/* ボトムナビ */}
+      {/* ボトムナビ（重厚メタル＋LEDインジケータ） */}
       <nav style={{
-        position: "fixed", bottom: 0, left: 0, right: 0,
-        background: "rgba(14,16,22,0.92)", backdropFilter: "blur(12px)",
-        borderTop: `1px solid ${T.line}`, display: "flex", justifyContent: "space-around",
-        padding: "8px 0 12px", zIndex: 40,
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 40,
+        background: "linear-gradient(180deg,#3A3F46 0%,#22262B 42%,#121417 100%)",
+        borderTop: `1px solid ${T.line2}`,
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,.22), inset 0 -8px 18px rgba(0,0,0,.6)",
       }}>
-        {tabs.map((t) => {
-          const active = tab === t.id;
-          return (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              style={{
-                border: "none", background: "none", display: "flex", flexDirection: "column",
-                alignItems: "center", gap: 4, fontFamily: T.body, fontWeight: 800,
-                fontSize: 10.5, letterSpacing: 0.3, color: active ? T.red : "#6B7386", padding: "2px 6px",
-              }}>
-              <span style={{
-                display: "flex", alignItems: "center", justifyContent: "center",
-                width: 46, height: 26, borderRadius: 999,
-                background: active ? "rgba(255,90,60,0.15)" : "transparent",
-                transition: "background 0.22s ease",
-              }}>
+        <div style={{ maxWidth: 520, margin: "0 auto", display: "flex", padding: "0 0 env(safe-area-inset-bottom, 0px)" }}>
+          {tabs.map((t, i) => {
+            const active = tab === t.id;
+            return (
+              <button key={t.id} onClick={() => setTab(t.id)}
+                style={{
+                  position: "relative", flex: 1, border: "none",
+                  borderLeft: i === 0 ? "none" : "1px solid rgba(255,255,255,.05)",
+                  borderRight: i === tabs.length - 1 ? "none" : "1px solid rgba(0,0,0,.5)",
+                  background: active ? "linear-gradient(180deg,#4A5057 0%,#2A2E34 45%,#171A1E 100%)" : "transparent",
+                  boxShadow: active
+                    ? "inset 0 1px 0 rgba(255,255,255,.3), inset 0 -10px 16px rgba(0,0,0,.55), 0 0 18px rgba(240,92,61,.16)"
+                    : "inset 0 6px 12px rgba(0,0,0,.4)",
+                  padding: "9px 0 10px", display: "flex", flexDirection: "column",
+                  alignItems: "center", gap: 4,
+                  fontFamily: T.body, fontWeight: 900, fontSize: 10.5, letterSpacing: 0.3,
+                  color: active ? "#FFF3EE" : "#8A9199",
+                  transition: "color 0.2s ease",
+                }}>
+                {/* 上端のLED */}
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: T.redBright, boxShadow: "0 0 12px rgba(240,92,61,.85)", display: active ? "block" : "none" }} />
                 <span className={active ? "msym on" : "msym"}
-                  style={{ fontSize: 22, color: active ? T.red : "#6B7386", transition: "color 0.22s ease" }}>
+                  style={{ fontSize: 22, color: active ? "#FFF3EE" : "#8A9199", textShadow: "0 1px 0 rgba(0,0,0,.8)", transition: "color 0.2s ease" }}>
                   {t.icon}
                 </span>
-              </span>
-              {t.label}
-            </button>
-          );
-        })}
+                <span style={{ textShadow: "0 1px 0 rgba(0,0,0,.8)" }}>{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </nav>
     </div>
   );
