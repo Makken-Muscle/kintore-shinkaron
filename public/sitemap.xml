@@ -2,11 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.kintore-shinkaron.com/</loc>
-    <lastmod>2026-07-05</lastmod>
+    <lastmod>2026-08-22</lastmod>
   </url>
   <url>
     <loc>https://www.kintore-shinkaron.com/guide.html</loc>
     <lastmod>2026-07-05</lastmod>
+  </url>
+  <url>
+    <loc>https://www.kintore-shinkaron.com/articles.html</loc>
+    <lastmod>2026-08-22</lastmod>
   </url>
   <url>
     <loc>https://www.kintore-shinkaron.com/hps-method.html</loc>
@@ -17,8 +21,20 @@
     <lastmod>2026-07-05</lastmod>
   </url>
   <url>
-    <loc>https://www.kintore-shinkaron.com/articles.html</loc>
-    <lastmod>2026-07-05</lastmod>
+    <loc>https://www.kintore-shinkaron.com/protein-nutrition.html</loc>
+    <lastmod>2026-08-22</lastmod>
+  </url>
+  <url>
+    <loc>https://www.kintore-shinkaron.com/recovery-sleep.html</loc>
+    <lastmod>2026-08-22</lastmod>
+  </url>
+  <url>
+    <loc>https://www.kintore-shinkaron.com/progressive-overload.html</loc>
+    <lastmod>2026-08-22</lastmod>
+  </url>
+  <url>
+    <loc>https://www.kintore-shinkaron.com/bodyweight-training.html</loc>
+    <lastmod>2026-08-22</lastmod>
   </url>
   <url>
     <loc>https://www.kintore-shinkaron.com/contact.html</loc>

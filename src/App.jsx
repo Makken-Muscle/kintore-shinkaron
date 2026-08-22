@@ -150,6 +150,17 @@ const CHARA_QUOTES = {
   ],
 };
 
+// コラム一覧（本体は public/ 内の静的HTML。ここはアプリ内の導線用）
+const ARTICLES = [
+  { href: "/guide.html", tag: { ja: "アプリの使い方", en: "How to use" }, title: { ja: "筋トレ進化論の使い方ガイド", en: "Muscle Evolution — User Guide" }, summary: { ja: "記録・進化・軽トラ換算・HPS計画まで全機能を解説。", en: "A full walkthrough of every feature of the app." } },
+  { href: "/hps-method.html", tag: { ja: "トレーニング理論", en: "Training theory" }, title: { ja: "HPS法とは — 筋肥大・パワー・筋力の6週間プログラム", en: "What is the HPS method? A 6-week program" }, summary: { ja: "H/P/Sの3刺激を1週間で回す6週間プログラムを解説。", en: "Cycle hypertrophy, power and strength within one week." } },
+  { href: "/big3-basics.html", tag: { ja: "初心者向け", en: "For beginners" }, title: { ja: "初心者のためのBIG3入門", en: "BIG3 basics for beginners" }, summary: { ja: "ベンチ・スクワット・デッドの基本フォームと重量設定。", en: "Form and starting weights for the big three lifts." } },
+  { href: "/protein-nutrition.html", tag: { ja: "栄養・食事", en: "Nutrition" }, title: { ja: "タンパク質・食事の基本", en: "Protein & nutrition basics" }, summary: { ja: "1日の摂取量の目安、PFCバランス、食事タイミングを解説。", en: "Daily protein targets, PFC balance and meal timing." } },
+  { href: "/recovery-sleep.html", tag: { ja: "休養・回復", en: "Recovery" }, title: { ja: "超回復と休養・睡眠の科学", en: "Recovery, rest & sleep" }, summary: { ja: "筋肉は休養中に育つ。回復日数と睡眠の重要性を解説。", en: "Muscle grows during rest — recovery times and sleep." } },
+  { href: "/progressive-overload.html", tag: { ja: "トレーニング理論", en: "Training theory" }, title: { ja: "停滞期の抜け方 — 漸進性過負荷", en: "Breaking plateaus — progressive overload" }, summary: { ja: "成長が止まる原因と、負荷を高める7つの方法。", en: "Why progress stalls and 7 ways to add load." } },
+  { href: "/bodyweight-training.html", tag: { ja: "初心者向け", en: "For beginners" }, title: { ja: "自宅でできる自重トレ入門", en: "Home bodyweight training" }, summary: { ja: "器具なしの基本4種目と初心者向け週間メニュー。", en: "Four no-equipment basics and a weekly menu." } },
+];
+
 // ============ デザイントークン（重厚版：金属背景 ＋ 落下の衝撃） ============
 const T = {
   bg: "#07080A",
@@ -290,7 +301,9 @@ const isFailureDay = (r) => r === "限界まで";
 const TXT = {
   ja: {
     loading: "読み込み中…💪",
-    tabLog: "記録", tabChara: "進化", tabTruck: "軽トラ", tabHeli: "ヘリ", tabPlan: "計画", tabGoal: "目標", tabSettings: "設定",
+    tabLog: "記録", tabChara: "進化", tabTruck: "軽トラ", tabHeli: "ヘリ", tabPlan: "計画", tabGoal: "目標", tabColumns: "コラム", tabSettings: "設定",
+    colHeading: "コラム", colIntro: "トレーニングに役立つ読み物", readArticle: "読む →",
+    goalCardLabel: "目標", tapToSetGoal: "タップで目標を設定", goalOpenAria: "目標を開く",
     langLabel: "言語 / Language",
     // 記録
     streak: "ストリーク", streakUnit: "回連続", streakNote: "中2日以内なら継続",
@@ -364,7 +377,9 @@ const TXT = {
   },
   en: {
     loading: "Loading…💪",
-    tabLog: "Record", tabChara: "Evolve", tabTruck: "Trucks", tabHeli: "Heli", tabPlan: "Plan", tabGoal: "Goal", tabSettings: "Settings",
+    tabLog: "Record", tabChara: "Evolve", tabTruck: "Trucks", tabHeli: "Heli", tabPlan: "Plan", tabGoal: "Goal", tabColumns: "Columns", tabSettings: "Settings",
+    colHeading: "Columns", colIntro: "Reading to help your training", readArticle: "Read →",
+    goalCardLabel: "Goal", tapToSetGoal: "Tap to set a goal", goalOpenAria: "Open goal",
     langLabel: "言語 / Language",
     streak: "Streak", streakUnit: "in a row", streakNote: "Continues within a 3-day gap",
     thisWeek: "This Week", dayUnit: "days", weekNote: "Starts Monday",
@@ -715,6 +730,7 @@ export default function App() {
   const [timer, setTimer] = useState({ total: 180, left: 180, running: false, endAt: null });
   const [timerDone, setTimerDone] = useState(false);
   const [goalTarget, setGoalTarget] = useState(6);
+  const [goalModal, setGoalModal] = useState(false); // 目標の作成・進捗・履歴ポップアップ
 
   useEffect(() => {
     (async () => {
@@ -1080,7 +1096,7 @@ export default function App() {
     { id: "chara", label: tx.tabChara, icon: "exercise" },
     { id: "truck", label: isHeli ? tx.tabHeli : tx.tabTruck, icon: isHeli ? "helicopter" : "local_shipping" },
     { id: "plan", label: tx.tabPlan, icon: "calendar_month" },
-    { id: "goal", label: tx.tabGoal, icon: "trophy" },
+    { id: "columns", label: tx.tabColumns, icon: "menu_book" },
     { id: "settings", label: tx.tabSettings, icon: "settings" },
   ];
 
@@ -1088,7 +1104,7 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: T.pageGrad, fontFamily: T.body, color: T.ink, paddingBottom: 92 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700&family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0..1,0&icon_names=calendar_month,date_range,edit_note,exercise,fitness_center,helicopter,local_fire_department,local_shipping,settings,timer,trophy&display=block');
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0..1,0&icon_names=calendar_month,date_range,edit_note,exercise,fitness_center,helicopter,local_fire_department,local_shipping,menu_book,settings,timer,trophy&display=block');
         /* Viteテンプレートやブラウザ標準の余白・背景を打ち消す（スマホの白枠対策） */
         html, body { margin: 0 !important; padding: 0 !important; background: #07080A !important; }
         body { overflow-x: hidden; }
@@ -1178,13 +1194,35 @@ export default function App() {
                 </p>
                 <p style={{ margin: "2px 0 0", fontSize: 10, color: T.sub }}>{tx.streakNote}</p>
               </section>
-              <section style={{ ...cardStyle, padding: "12px 14px", textAlign: "center" }}>
-                <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><span className="msym" style={{ fontSize: 15, color: T.blue }}>date_range</span>{tx.thisWeek}</p>
-                <p style={{ margin: "2px 0 0" }}>
-                  <span style={{ fontFamily: T.num, fontSize: 30 }}>{weekCount}</span>
-                  <span style={{ fontSize: 13, marginLeft: 3 }}>{tx.dayUnit}</span>
-                </p>
-                <p style={{ margin: "2px 0 0", fontSize: 10, color: T.sub }}>{tx.weekNote}</p>
+              {/* 目標統合カード（通常は今週の日数、目標設定中は進捗。タップで目標ポップアップ） */}
+              <section onClick={() => setGoalModal(true)} role="button" aria-label={tx.goalOpenAria}
+                style={{ ...cardStyle, padding: "12px 14px", textAlign: "center", cursor: "pointer", position: "relative", borderTop: data.goal ? `2px solid ${data.goal.rewarded ? T.green : T.red}` : undefined }}>
+                {data.goal ? (
+                  <>
+                    <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><span className="msym" style={{ fontSize: 15, color: T.yellow }}>trophy</span>{tx.goalCardLabel}</p>
+                    <p style={{ margin: "2px 0 0" }}>
+                      <span style={{ fontFamily: T.num, fontSize: 30, color: data.goal.rewarded ? T.green : T.ink }}>{goalDaysCount}</span>
+                      <span style={{ fontSize: 13, color: T.sub }}> / {data.goal.target}{lang === "ja" ? "日" : ""}</span>
+                    </p>
+                    <p style={{ margin: "2px 0 0", fontSize: 10, color: T.sub }}>
+                      {data.goal.rewarded
+                        ? (lang === "ja" ? "達成 🏆" : "Achieved 🏆")
+                        : (() => {
+                            const dl = Math.max(0, Math.ceil((new Date(data.goal.end + "T00:00:00") - new Date(todayStr() + "T00:00:00")) / 86400000));
+                            return lang === "ja" ? `あと${dl}日` : `${dl} days left`;
+                          })()}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><span className="msym" style={{ fontSize: 15, color: T.blue }}>date_range</span>{tx.thisWeek}</p>
+                    <p style={{ margin: "2px 0 0" }}>
+                      <span style={{ fontFamily: T.num, fontSize: 30 }}>{weekCount}</span>
+                      <span style={{ fontSize: 13, marginLeft: 3 }}>{tx.dayUnit}</span>
+                    </p>
+                    <p style={{ margin: "2px 0 0", fontSize: 10, color: T.red, fontWeight: 700 }}>{tx.tapToSetGoal}</p>
+                  </>
+                )}
               </section>
             </div>
 
@@ -1727,83 +1765,22 @@ export default function App() {
           </div>
         )}
 
-        {/* ===== 目標 ===== */}
-        {tab === "goal" && (
-          <div style={{ display: "grid", gap: 14 }}>
-            {!data.goal ? (
-              <section style={cardStyle}>
-                <h2 style={h2Style}>{tx.setGoalTitle}</h2>
-                <p style={{ fontSize: 13, color: T.sub, margin: "8px 0 14px", lineHeight: 1.7 }}>
-                  {lang === "ja"
-                    ? <>今日から14日間で何日トレーニングするか決めましょう。達成すると<strong style={{ color: T.yellow }}>ボディビル大会の掛け声称号</strong>を獲得！</>
-                    : <>Decide how many days you'll train over the next 14 days. Clear it to earn a <strong style={{ color: T.yellow }}>bodybuilding contest cheer title</strong>!</>}
-                </p>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, marginBottom: 16 }}>
-                  <button onClick={() => setGoalTarget(Math.max(1, goalTarget - 1))}
-                    style={{ width: 46, height: 46, borderRadius: 999, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontSize: 22 }}>−</button>
-                  <div style={{ textAlign: "center" }}>
-                    <span style={{ fontFamily: T.num, fontSize: 52, lineHeight: 1 }}>{goalTarget}</span>
-                    <span style={{ fontSize: 15, marginLeft: 4, color: T.sub }}>{tx.dayUnit}</span>
-                  </div>
-                  <button onClick={() => setGoalTarget(Math.min(14, goalTarget + 1))}
-                    style={{ width: 46, height: 46, borderRadius: 999, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontSize: 22 }}>＋</button>
-                </div>
-                <button onClick={startGoal} style={{ ...primaryBtn(false), width: "100%" }}>{tx.goalStart}</button>
-              </section>
-            ) : (
-              <section style={{ ...cardStyle, borderLeft: `5px solid ${data.goal.rewarded ? T.green : T.red}` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                  <h2 style={h2Style}>{tx.activeGoal}</h2>
-                  <span style={{ fontSize: 11, color: T.sub }}>{fmtDate(data.goal.start)} 〜 {fmtDate(addDays(data.goal.end, -1))}</span>
-                </div>
-                <p style={{ textAlign: "center", margin: "16px 0 8px" }}>
-                  <span style={{ fontFamily: T.num, fontSize: 46 }}>{goalDaysCount}</span>
-                  <span style={{ fontSize: 16, color: T.sub }}> / {data.goal.target}{lang === "ja" ? "日" : " " + tx.dayUnit}</span>
-                </p>
-                <div style={{ height: 14, background: T.surface2, borderRadius: 999, overflow: "hidden", boxShadow: T.groove }}>
-                  <div style={{
-                    height: "100%", borderRadius: 999, transition: "width 0.6s",
-                    background: data.goal.rewarded ? T.green : `linear-gradient(90deg, ${T.red}, ${T.yellow})`,
-                    width: `${Math.min(100, (goalDaysCount / data.goal.target) * 100)}%`,
-                  }} />
-                </div>
-                {data.goal.rewarded ? (
-                  <p style={{ textAlign: "center", margin: "14px 0 0", fontWeight: 800, color: T.green }}>
-                    {lang === "ja"
-                      ? `🎉 達成！称号「${shoutText(data.goal.title, lang)}」を獲得しました`
-                      : `🎉 Achieved! You earned the title "${shoutText(data.goal.title, lang)}"`}
-                  </p>
-                ) : (
-                  <p style={{ textAlign: "center", margin: "14px 0 0", fontSize: 13, color: T.sub }}>
-                    {(() => {
-                      const daysLeft = Math.max(0, Math.ceil((new Date(data.goal.end + "T00:00:00") - new Date(todayStr() + "T00:00:00")) / 86400000));
-                      return lang === "ja" ? `期限まであと${daysLeft}日。今日の1回が未来のバルク。` : `${daysLeft} days left. Today's rep is tomorrow's bulk.`;
-                    })()}
-                  </p>
-                )}
-                {(goalExpired || data.goal.rewarded) && (
-                  <button onClick={finishGoal} style={{
-                    marginTop: 14, width: "100%", padding: "12px", borderRadius: 12,
-                    border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink,
-                    fontWeight: 800, fontSize: 14, fontFamily: T.body,
-                  }}>{tx.finishGoal}</button>
-                )}
-              </section>
-            )}
-
-            {data.goalHistory.length > 0 && (
-              <section style={cardStyle}>
-                <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 8 }}>{tx.pastGoals}</h3>
-                {data.goalHistory.map((g, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderTop: `1px solid ${T.line}`, fontSize: 13 }}>
-                    <span style={{ color: T.sub }}>{fmtDate(g.start)}〜　<span style={{ color: T.ink, fontFamily: T.num, fontSize: 14 }}>{g.count}/{g.target}</span>{lang === "ja" ? "日" : " " + tx.dayUnit}</span>
-                    <span style={{ fontWeight: 800, color: g.achieved ? T.green : "#5A6172" }}>
-                      {g.achieved ? tx.achievedTag : tx.failedTag}
-                    </span>
-                  </div>
-                ))}
-              </section>
-            )}
+        {/* ===== コラム ===== */}
+        {tab === "columns" && (
+          <div style={{ display: "grid", gap: 12 }}>
+            <div>
+              <h2 style={{ ...h2Style, fontSize: 18 }}>{tx.colHeading}</h2>
+              <p style={{ fontSize: 12, color: T.sub, margin: "6px 0 2px" }}>{tx.colIntro}</p>
+            </div>
+            {ARTICLES.map((a) => (
+              <a key={a.href} href={a.href}
+                style={{ ...cardStyle, display: "block", textDecoration: "none", color: T.ink }}>
+                <span style={{ display: "inline-block", fontFamily: T.cond, fontWeight: 700, fontSize: 11, letterSpacing: 1, color: T.yellow, border: `1px solid ${T.line2}`, background: T.surface2, borderRadius: 999, padding: "2px 10px" }}>{a.tag[lang]}</span>
+                <h3 style={{ margin: "9px 0 5px", fontFamily: T.display, fontWeight: 400, fontSize: 15, lineHeight: 1.5, color: T.ink }}>{a.title[lang]}</h3>
+                <p style={{ margin: 0, fontSize: 13, color: T.sub, lineHeight: 1.7 }}>{a.summary[lang]}</p>
+                <span style={{ display: "inline-block", marginTop: 9, fontSize: 12, fontWeight: 800, color: T.red }}>{tx.readArticle}</span>
+              </a>
+            ))}
           </div>
         )}
 
@@ -2176,6 +2153,98 @@ export default function App() {
               「{shoutText(celebration, lang)}」
             </p>
             <p style={{ color: T.sub, fontSize: 13, marginTop: 22 }}>{tx.tapClose}</p>
+          </div>
+        </div>
+      )}
+
+      {/* 目標ポップアップ（記録タブのカードから開く） */}
+      {goalModal && (
+        <div onClick={() => setGoalModal(false)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(10,11,15,0.75)", zIndex: 60,
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+          }}>
+          <div role="dialog" aria-label={tx.goalCardLabel} onClick={(e) => e.stopPropagation()}
+            style={{ ...cardStyle, width: "100%", maxWidth: 360, maxHeight: "85vh", overflowY: "auto", animation: "popIn 0.25s ease-out", display: "grid", gap: 14 }}>
+            {!data.goal ? (
+              <section>
+                <h2 style={h2Style}>{tx.setGoalTitle}</h2>
+                <p style={{ fontSize: 13, color: T.sub, margin: "8px 0 14px", lineHeight: 1.7 }}>
+                  {lang === "ja"
+                    ? <>今日から14日間で何日トレーニングするか決めましょう。達成すると<strong style={{ color: T.yellow }}>ボディビル大会の掛け声称号</strong>を獲得！</>
+                    : <>Decide how many days you'll train over the next 14 days. Clear it to earn a <strong style={{ color: T.yellow }}>bodybuilding contest cheer title</strong>!</>}
+                </p>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, marginBottom: 16 }}>
+                  <button onClick={() => setGoalTarget(Math.max(1, goalTarget - 1))}
+                    style={{ width: 46, height: 46, borderRadius: 999, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontSize: 22 }}>−</button>
+                  <div style={{ textAlign: "center" }}>
+                    <span style={{ fontFamily: T.num, fontSize: 52, lineHeight: 1 }}>{goalTarget}</span>
+                    <span style={{ fontSize: 15, marginLeft: 4, color: T.sub }}>{tx.dayUnit}</span>
+                  </div>
+                  <button onClick={() => setGoalTarget(Math.min(14, goalTarget + 1))}
+                    style={{ width: 46, height: 46, borderRadius: 999, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontSize: 22 }}>＋</button>
+                </div>
+                <button onClick={startGoal} style={{ ...primaryBtn(false), width: "100%" }}>{tx.goalStart}</button>
+              </section>
+            ) : (
+              <section style={{ borderLeft: `5px solid ${data.goal.rewarded ? T.green : T.red}`, paddingLeft: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <h2 style={h2Style}>{tx.activeGoal}</h2>
+                  <span style={{ fontSize: 11, color: T.sub }}>{fmtDate(data.goal.start)} 〜 {fmtDate(addDays(data.goal.end, -1))}</span>
+                </div>
+                <p style={{ textAlign: "center", margin: "16px 0 8px" }}>
+                  <span style={{ fontFamily: T.num, fontSize: 46 }}>{goalDaysCount}</span>
+                  <span style={{ fontSize: 16, color: T.sub }}> / {data.goal.target}{lang === "ja" ? "日" : " " + tx.dayUnit}</span>
+                </p>
+                <div style={{ height: 14, background: T.surface2, borderRadius: 999, overflow: "hidden", boxShadow: T.groove }}>
+                  <div style={{
+                    height: "100%", borderRadius: 999, transition: "width 0.6s",
+                    background: data.goal.rewarded ? T.green : `linear-gradient(90deg, ${T.red}, ${T.yellow})`,
+                    width: `${Math.min(100, (goalDaysCount / data.goal.target) * 100)}%`,
+                  }} />
+                </div>
+                {data.goal.rewarded ? (
+                  <p style={{ textAlign: "center", margin: "14px 0 0", fontWeight: 800, color: T.green }}>
+                    {lang === "ja"
+                      ? `🎉 達成！称号「${shoutText(data.goal.title, lang)}」を獲得しました`
+                      : `🎉 Achieved! You earned the title "${shoutText(data.goal.title, lang)}"`}
+                  </p>
+                ) : (
+                  <p style={{ textAlign: "center", margin: "14px 0 0", fontSize: 13, color: T.sub }}>
+                    {(() => {
+                      const daysLeft = Math.max(0, Math.ceil((new Date(data.goal.end + "T00:00:00") - new Date(todayStr() + "T00:00:00")) / 86400000));
+                      return lang === "ja" ? `期限まであと${daysLeft}日。今日の1回が未来のバルク。` : `${daysLeft} days left. Today's rep is tomorrow's bulk.`;
+                    })()}
+                  </p>
+                )}
+                {(goalExpired || data.goal.rewarded) && (
+                  <button onClick={finishGoal} style={{
+                    marginTop: 14, width: "100%", padding: "12px", borderRadius: 12,
+                    border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink,
+                    fontWeight: 800, fontSize: 14, fontFamily: T.body,
+                  }}>{tx.finishGoal}</button>
+                )}
+              </section>
+            )}
+
+            {data.goalHistory.length > 0 && (
+              <section>
+                <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 8 }}>{tx.pastGoals}</h3>
+                {data.goalHistory.map((g, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderTop: `1px solid ${T.line}`, fontSize: 13 }}>
+                    <span style={{ color: T.sub }}>{fmtDate(g.start)}〜　<span style={{ color: T.ink, fontFamily: T.num, fontSize: 14 }}>{g.count}/{g.target}</span>{lang === "ja" ? "日" : " " + tx.dayUnit}</span>
+                    <span style={{ fontWeight: 800, color: g.achieved ? T.green : "#5A6172" }}>
+                      {g.achieved ? tx.achievedTag : tx.failedTag}
+                    </span>
+                  </div>
+                ))}
+              </section>
+            )}
+
+            <button onClick={() => setGoalModal(false)}
+              style={{ padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
+              {lang === "ja" ? "閉じる" : "Close"}
+            </button>
           </div>
         </div>
       )}
