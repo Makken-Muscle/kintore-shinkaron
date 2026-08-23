@@ -1399,7 +1399,7 @@ export default function App() {
                   width: `${timer.total ? (timer.left / timer.total) * 100 : 0}%`,
                 }} />
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
                 {[
                   { sec: 60, label: "1:00" },
                   { sec: 90, label: "1:30" },
@@ -1408,7 +1408,7 @@ export default function App() {
                 ].map((p) => (
                   <button key={p.sec} onClick={() => startTimer(p.sec)}
                     style={{
-                      padding: "10px 0", borderRadius: 10, fontFamily: T.num, fontSize: 15,
+                      padding: "16px 0", borderRadius: 10, fontFamily: T.num, fontSize: 20,
                       border: `1.5px solid ${timer.total === p.sec ? T.green : T.line}`,
                       background: T.surface2, color: timer.total === p.sec ? T.green : T.ink,
                     }}>
@@ -1436,9 +1436,6 @@ export default function App() {
                   {tx.reset}
                 </button>
               </div>
-              <p style={{ margin: "10px 0 0", fontSize: 11, color: T.sub }}>
-                {tx.timerHint}
-              </p>
             </section>
 
             <section style={cardStyle}>
