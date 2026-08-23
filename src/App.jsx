@@ -161,6 +161,51 @@ const ARTICLES = [
   { href: "/bodyweight-training.html", tag: { ja: "初心者向け", en: "For beginners" }, title: { ja: "自宅でできる自重トレ入門", en: "Home bodyweight training" }, summary: { ja: "器具なしの基本4種目と初心者向け週間メニュー。", en: "Four no-equipment basics and a weekly menu." } },
 ];
 
+// ============ 月間ランク（メタル階級）＆キャラ着せ替え ============
+// 今月のトレ日数で決まる階級（毎月リセット）。min=そのランクに必要な月内トレ日数
+const METAL_RANKS = [
+  { min: 0, name: { ja: "未ランク", en: "Unranked" }, color: "#5A616B" },
+  { min: 1, name: { ja: "鉄クズ", en: "Scrap Iron" }, color: "#6E757E" },
+  { min: 4, name: { ja: "鋼", en: "Steel" }, color: "#9AA1AA" },
+  { min: 7, name: { ja: "クロム", en: "Chrome" }, color: "#C9CFD6" },
+  { min: 10, name: { ja: "チタン", en: "Titanium" }, color: "#6FB0D6" },
+  { min: 14, name: { ja: "タングステン", en: "Tungsten" }, color: "#C77DFF" },
+  { min: 18, name: { ja: "ダイヤモンド", en: "Diamond" }, color: "#7FE3EF" },
+  { min: 22, name: { ja: "オリハルコン", en: "Orichalcum" }, color: "#E8C33A" },
+];
+const rankIdxForDays = (days) => {
+  let idx = 0;
+  METAL_RANKS.forEach((r, i) => { if (days >= r.min) idx = i; });
+  return idx;
+};
+
+// 着せ替えアイテム（解放条件は UNLOCKS）
+const ACCESSORIES = [
+  { id: "none", name: { ja: "なし", en: "None" } },
+  { id: "headband", name: { ja: "ヘッドバンド", en: "Headband" } },
+  { id: "sunglasses", name: { ja: "サングラス", en: "Sunglasses" } },
+  { id: "chain", name: { ja: "金チェーン", en: "Gold Chain" } },
+  { id: "belt", name: { ja: "チャンピオンベルト", en: "Champion Belt" } },
+  { id: "crown", name: { ja: "王冠", en: "Crown" } },
+];
+const AURAS = [
+  { id: "none", name: { ja: "なし", en: "None" } },
+  { id: "ember", name: { ja: "赤い闘気", en: "Ember" } },
+  { id: "gold", name: { ja: "黄金の輝き", en: "Golden" } },
+  { id: "holo", name: { ja: "虹のオーラ", en: "Holo" } },
+];
+// 解放条件: { stage } = stageIdx到達、{ rank } = 自己ベスト階級idx到達。none/未定義は常時解放
+const UNLOCKS = {
+  headband: { stage: 2 },
+  sunglasses: { stage: 4 },
+  chain: { rank: 3 },
+  belt: { rank: 5 },
+  crown: { rank: 6 },
+  ember: { stage: 3 },
+  gold: { rank: 4 },
+  holo: { rank: 7 },
+};
+
 // ============ デザイントークン（重厚版：金属背景 ＋ 落下の衝撃） ============
 const T = {
   bg: "#07080A",
@@ -305,6 +350,8 @@ const TXT = {
     tabLog: "記録", tabChara: "進化", tabTruck: "軽トラ", tabHeli: "ヘリ", tabPlan: "計画", tabGoal: "目標", tabColumns: "コラム", tabSettings: "設定",
     colHeading: "コラム", colIntro: "トレーニングに役立つ読み物", readArticle: "読む →",
     goalCardLabel: "目標", tapToSetGoal: "タップで目標を設定", goalOpenAria: "目標を開く",
+    rankTitle: "今月のランク", rankBest: "自己ベスト", rankNext: "次のランクまで", rankMaxed: "最高ランク到達！", rankDaysUnit: "日",
+    customizeTitle: "着せ替え", accessoryLabel: "アクセサリー", auraLabel: "オーラ", tapToCustomize: "タップで着せ替え", close: "閉じる",
     langLabel: "言語 / Language",
     // 記録
     streak: "ストリーク", streakUnit: "回連続", streakNote: "中2日以内なら継続",
@@ -381,6 +428,8 @@ const TXT = {
     tabLog: "Record", tabChara: "Evolve", tabTruck: "Trucks", tabHeli: "Heli", tabPlan: "Plan", tabGoal: "Goal", tabColumns: "Columns", tabSettings: "Settings",
     colHeading: "Columns", colIntro: "Reading to help your training", readArticle: "Read →",
     goalCardLabel: "Goal", tapToSetGoal: "Tap to set a goal", goalOpenAria: "Open goal",
+    rankTitle: "This Month's Rank", rankBest: "Best", rankNext: "To next rank", rankMaxed: "Top rank reached!", rankDaysUnit: "days",
+    customizeTitle: "Customize", accessoryLabel: "Accessory", auraLabel: "Aura", tapToCustomize: "Tap to customize", close: "Close",
     langLabel: "言語 / Language",
     streak: "Streak", streakUnit: "in a row", streakNote: "Continues within a 3-day gap",
     thisWeek: "This Week", dayUnit: "days", weekNote: "Starts Monday",
@@ -475,9 +524,13 @@ function limbPath(points, widths) {
   return smoothClosedPath([...L, ...R.reverse()]);
 }
 
-function MuscleCharacter({ levels }) {
+function MuscleCharacter({ levels, appearance }) {
   const { chest, shoulder, arm, back, leg, abs } = levels;
   const mAvg = (chest + shoulder + arm + back + leg + abs) / 6;
+  const acc = appearance?.accessory || "none";
+  const aura = appearance?.aura || "none";
+  // サングラスは選択時、または無指定で十分育つと自動で装着
+  const showSunglasses = acc === "sunglasses" || (acc === "none" && mAvg >= 0.85);
   const skin = "#F1C27D";
   const skinDark = "#C98E4B";
   const cx = 100;
@@ -522,8 +575,30 @@ function MuscleCharacter({ levels }) {
           <stop offset="55%" stopColor="#121417" />
           <stop offset="100%" stopColor="#0A0B0D" />
         </radialGradient>
+        <radialGradient id="aura-ember" cx="50%" cy="50%" r="52%">
+          <stop offset="0%" stopColor="#FF6A3C" stopOpacity="0" />
+          <stop offset="58%" stopColor="#FF3B1F" stopOpacity="0.34" />
+          <stop offset="100%" stopColor="#FF3B1F" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="aura-gold" cx="50%" cy="50%" r="52%">
+          <stop offset="0%" stopColor="#FFE07A" stopOpacity="0" />
+          <stop offset="56%" stopColor="#E8C33A" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#E8C33A" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="aura-holo" cx="50%" cy="50%" r="52%">
+          <stop offset="0%" stopColor="#7FE3EF" stopOpacity="0" />
+          <stop offset="45%" stopColor="#7FE3EF" stopOpacity="0.30" />
+          <stop offset="72%" stopColor="#C77DFF" stopOpacity="0.30" />
+          <stop offset="100%" stopColor="#FF7BAC" stopOpacity="0" />
+        </radialGradient>
       </defs>
       <rect x="0" y="0" width="200" height="240" fill="url(#spot)" />
+      {/* オーラ（キャラ背後の発光） */}
+      {aura !== "none" && (
+        <g style={{ transformOrigin: "100px 122px", animation: aura === "holo" ? "auraSpin 8s linear infinite" : "auraPulse 2.8s ease-in-out infinite" }}>
+          <ellipse cx="100" cy="122" rx="90" ry="118" fill={`url(#aura-${aura})`} />
+        </g>
+      )}
       <polygon points="70,0 130,0 168,215 32,215" fill="#E8C33A" opacity="0.06" />
       <rect x="14" y="212" width="172" height="4" fill="#08090A" />
       <ellipse cx="100" cy="216" rx={40 + (shoulder + leg) * 14} ry="7" fill="rgba(0,0,0,0.5)" />
@@ -607,7 +682,7 @@ function MuscleCharacter({ levels }) {
       <path d={`M ${cx - neckW / 2} 58 L ${cx + neckW / 2} 58 L ${cx + neckW / 2 + back * 3} 74 L ${cx - neckW / 2 - back * 3} 74 Z`} fill={skin} />
       <circle cx={cx} cy="44" r="20" fill={skin} />
       <path d={`M ${cx - 19} 40 Q ${cx - 16} 22 ${cx} 23 Q ${cx + 16} 22 ${cx + 19} 40 Q ${cx + 12} 30 ${cx} 30 Q ${cx - 12} 30 ${cx - 19} 40 Z`} fill="#2B2323" />
-      {mAvg >= 0.85 ? (
+      {showSunglasses ? (
         <rect x={cx - 14} y="40" width="28" height="7" rx="3" fill="#0D0F13" />
       ) : (
         <g>
@@ -620,6 +695,38 @@ function MuscleCharacter({ levels }) {
         <g fill="#E8C33A">
           <path d="M 30 60 l 3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3 Z" />
           <path d="M 168 90 l 2.5 6 6 2.5 -6 2.5 -2.5 6 -2.5 -6 -6 -2.5 6 -2.5 Z" />
+        </g>
+      )}
+
+      {/* ===== 着せ替えアクセサリー ===== */}
+      {acc === "headband" && (
+        <g>
+          <path d="M 80 33 Q 100 29 120 33 L 120 40 Q 100 36 80 40 Z" fill="#E4482A" />
+          <rect x={cx - 2} y="35" width="4" height="3" fill="#fff" opacity="0.85" />
+          <path d="M 118 37 l 12 -5 3 5 -11 6 Z" fill="#B9331A" />
+          <path d="M 118 39 l 13 3 -1 6 -12 -4 Z" fill="#E4482A" />
+        </g>
+      )}
+      {acc === "chain" && (
+        <g stroke="#E8C33A" strokeWidth="2.4" fill="none" strokeLinecap="round">
+          <path d={`M ${cx - 12} 60 Q ${cx} 80 ${cx + 12} 60`} opacity="0.95" />
+          <circle cx={cx} cy="76" r="3.6" fill="#E8C33A" stroke="#7C5A12" strokeWidth="1" />
+        </g>
+      )}
+      {acc === "belt" && (
+        <g>
+          <rect x={cx - hipW * 0.5} y="134" width={hipW} height="10" rx="1.5" fill="#241A0C" stroke="#0A0B0D" strokeWidth="0.5" />
+          <ellipse cx={cx} cy="139" rx="12" ry="8" fill="#E8C33A" stroke="#7C5A12" strokeWidth="1.2" />
+          <ellipse cx={cx} cy="139" rx="6" ry="4.5" fill="#F6DE8A" />
+        </g>
+      )}
+      {acc === "crown" && (
+        <g>
+          <path d="M 82 26 L 85 14 L 92 23 L 100 11 L 108 23 L 115 14 L 118 26 Z" fill="#E8C33A" stroke="#7C5A12" strokeWidth="1" strokeLinejoin="round" />
+          <rect x="82" y="26" width="36" height="4" fill="#D8A21F" />
+          <circle cx="100" cy="15" r="2.2" fill="#FF3B1F" />
+          <circle cx="86" cy="18" r="1.6" fill="#7FE3EF" />
+          <circle cx="114" cy="18" r="1.6" fill="#7FE3EF" />
         </g>
       )}
     </svg>
@@ -715,7 +822,7 @@ const primaryBtn = (disabled) => ({
 export default function App() {
   const [tab, setTab] = useState("log");
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState({ logs: [], goal: null, titles: [], goalHistory: [], plan: null, vehicle: { type: "truck", resetBase: 0 }, customExercises: [], lang: detectLang() });
+  const [data, setData] = useState({ logs: [], goal: null, titles: [], goalHistory: [], plan: null, vehicle: { type: "truck", resetBase: 0 }, customExercises: [], lang: detectLang(), appearance: { accessory: "none", aura: "none" } });
   const [celebration, setCelebration] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [ioMsg, setIoMsg] = useState(null); // { type: "ok"|"err", text }
@@ -744,6 +851,7 @@ export default function App() {
   const [timerDone, setTimerDone] = useState(false);
   const [goalTarget, setGoalTarget] = useState(6);
   const [goalModal, setGoalModal] = useState(false); // 目標の作成・進捗・履歴ポップアップ
+  const [customizeModal, setCustomizeModal] = useState(false); // キャラ着せ替えポップアップ
 
   useEffect(() => {
     (async () => {
@@ -758,6 +866,7 @@ export default function App() {
             vehicle: d.vehicle || { type: "truck", resetBase: 0 },
             customExercises: d.customExercises || [],
             lang: LANGS.includes(d.lang) ? d.lang : detectLang(),
+            appearance: { accessory: d.appearance?.accessory || "none", aura: d.appearance?.aura || "none" },
           });
           if (d.plan) setRm({ bench: String(d.plan.bench || ""), squat: String(d.plan.squat || ""), dead: String(d.plan.dead || "") });
         } catch (e) { console.error("データの読み込みに失敗", e); }
@@ -818,6 +927,7 @@ export default function App() {
           vehicle: d.vehicle || { type: "truck", resetBase: 0 },
           customExercises: Array.isArray(d.customExercises) ? d.customExercises : [],
           lang: LANGS.includes(d.lang) ? d.lang : (data.lang || "ja"),
+          appearance: { accessory: d.appearance?.accessory || "none", aura: d.appearance?.aura || "none" },
         };
         setImportPreview(clean);
       } catch (err) {
@@ -880,6 +990,22 @@ export default function App() {
     const mStr = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}-${String(monday.getDate()).padStart(2, "0")}`;
     return new Set(data.logs.filter((l) => l.date >= mStr).map((l) => l.date)).size;
   }, [data.logs]);
+
+  // ---- 月間ランク（今月のトレ日数で決まるメタル階級）＋自己ベスト ----
+  const monthCount = useMemo(() => {
+    const ym = todayStr().slice(0, 7); // YYYY-MM
+    return new Set(data.logs.filter((l) => l.date.startsWith(ym)).map((l) => l.date)).size;
+  }, [data.logs]);
+  const monthRankIdx = rankIdxForDays(monthCount);
+  // 各月のユニーク日数の最大 → 自己ベスト階級（解放判定に使用。不調な月でも失われない）
+  const bestMonthDays = useMemo(() => {
+    const byMonth = {};
+    data.logs.forEach((l) => { const ym = l.date.slice(0, 7); (byMonth[ym] = byMonth[ym] || new Set()).add(l.date); });
+    let best = 0;
+    Object.values(byMonth).forEach((set) => { best = Math.max(best, set.size); });
+    return best;
+  }, [data.logs]);
+  const bestRankIdx = rankIdxForDays(bestMonthDays);
 
   const vehicle = data.vehicle || { type: "truck", resetBase: 0 };
   const isHeli = vehicle.type === "heli";
@@ -1031,6 +1157,16 @@ export default function App() {
   // ---- 言語切替 ----
   const changeLang = (next) => { if (LANGS.includes(next)) save({ ...data, lang: next }); };
 
+  // ---- キャラ着せ替え（解放判定＋変更） ----
+  const isUnlocked = (id) => {
+    const u = UNLOCKS[id];
+    if (!u) return true; // none 等は常時解放
+    if (u.stage !== undefined) return stageIdx >= u.stage;
+    if (u.rank !== undefined) return bestRankIdx >= u.rank;
+    return true;
+  };
+  const changeAppearance = (patch) => save({ ...data, appearance: { ...(data.appearance || { accessory: "none", aura: "none" }), ...patch } });
+
   // ---- 乗り物をヘリコプターへアップグレード ----
   const upgradeToHeli = () => {
     save({ ...data, vehicle: { type: "heli", resetBase: totalVolume } });
@@ -1080,6 +1216,7 @@ export default function App() {
     const shown = Math.min(truckCount, 100);
     if (shown === 0) return;
     const q = quakeRef.current;
+    const sk = shakeRef.current;
     const timers = [];
     for (let i = 0; i < shown; i++) {
       const delay = Math.min(i, 40) * 0.07; // 落下の stagger と一致
@@ -1088,7 +1225,7 @@ export default function App() {
     return () => {
       timers.forEach(clearTimeout);
       clearTimeout(q.timer);
-      if (shakeRef.current) { shakeRef.current.style.animation = ""; shakeRef.current.style.willChange = ""; }
+      if (sk) { sk.style.animation = ""; sk.style.willChange = ""; }
     };
   }, [tab, truckCount]); // eslint-disable-line
 
@@ -1116,7 +1253,7 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: T.pageGrad, fontFamily: T.body, color: T.ink, paddingBottom: 92 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700&family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0..1,0&icon_names=calendar_month,date_range,edit_note,exercise,fitness_center,helicopter,local_fire_department,local_shipping,menu_book,settings,timer,trophy&display=block');
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0..1,0&icon_names=calendar_month,date_range,edit_note,exercise,fitness_center,helicopter,local_fire_department,local_shipping,menu_book,military_tech,settings,timer,trophy&display=block');
         /* Viteテンプレートやブラウザ標準の余白・背景を打ち消す（スマホの白枠対策） */
         html, body { margin: 0 !important; padding: 0 !important; background: #07080A !important; }
         body { overflow-x: hidden; }
@@ -1135,6 +1272,9 @@ export default function App() {
         /* 成長バー・掛け声ティッカー */
         @keyframes barFill { from { width: 0; } }
         @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        /* キャラのオーラ */
+        @keyframes auraPulse { 0%,100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.06); opacity: 1; } }
+        @keyframes auraSpin { to { transform: rotate(360deg); } }
         button { cursor: pointer; }
         input:focus, select:focus { border-color: #E4482A !important; box-shadow: inset 0 1px 3px rgba(0,0,0,.8), 0 0 0 2px rgba(228,72,42,.25) !important; }
         select option { background: #1A1D21; color: #F4F4F2; }
@@ -1440,6 +1580,46 @@ export default function App() {
         {/* ===== 進化 ===== */}
         {tab === "chara" && (
           <div style={{ display: "grid", gap: 14 }}>
+            {/* ===== 今月のランク（メタル階級）＝最上部・タップで着せ替え ===== */}
+            {(() => {
+              const rank = METAL_RANKS[monthRankIdx];
+              const nextRank = METAL_RANKS[monthRankIdx + 1];
+              const best = METAL_RANKS[bestRankIdx];
+              const rc = rank.color;
+              return (
+                <section onClick={() => setCustomizeModal(true)} role="button" aria-label={tx.customizeTitle}
+                  style={{ ...cardStyle, borderTop: `2px solid ${rc}`, cursor: "pointer" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontFamily: T.cond, fontWeight: 700, fontSize: 11, letterSpacing: 2, color: T.sub }}>{tx.rankTitle}</span>
+                    <span style={{ fontSize: 11, color: T.sub2 }}>{tx.rankBest}: <span style={{ color: best.color, fontWeight: 800 }}>{best.name[lang]}</span></span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10 }}>
+                    {/* メタル階級バッジ */}
+                    <div style={{ flex: "none", width: 58, height: 58, borderRadius: 6, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: `1px solid ${rc}`, background: "linear-gradient(180deg,#22262B,#101317)", boxShadow: `inset 0 1px 0 rgba(255,255,255,.14), 0 2px 0 #0A0B0D, 0 0 14px ${rc}55` }}>
+                      <span className="msym" style={{ fontSize: 24, color: rc, textShadow: "0 1px 0 rgba(0,0,0,.8)" }}>military_tech</span>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontFamily: T.display, fontWeight: 400, fontSize: 19, color: rc, textShadow: T.emboss, lineHeight: 1.2 }}>{rank.name[lang]}</p>
+                      <p style={{ margin: "2px 0 8px", fontSize: 12, color: T.sub }}>{lang === "ja" ? `今月 ${monthCount}日` : `${monthCount} ${tx.rankDaysUnit} this month`}</p>
+                      {nextRank ? (
+                        <>
+                          <div style={{ height: 8, background: T.surface2, borderRadius: 999, overflow: "hidden", boxShadow: T.groove }}>
+                            <div style={{ height: "100%", borderRadius: 999, background: `linear-gradient(90deg, ${rc}, ${nextRank.color})`, transition: "width 0.6s", width: `${Math.min(100, ((monthCount - rank.min) / (nextRank.min - rank.min)) * 100)}%` }} />
+                          </div>
+                          <p style={{ margin: "5px 0 0", fontSize: 11, color: T.sub2 }}>{tx.rankNext} <span style={{ fontFamily: T.num, color: nextRank.color }}>{nextRank.min - monthCount}</span>{lang === "ja" ? "日（" : " " + tx.rankDaysUnit + " ("}<span style={{ color: nextRank.color }}>{nextRank.name[lang]}</span>{lang === "ja" ? "）" : ")"}</p>
+                        </>
+                      ) : (
+                        <p style={{ margin: "5px 0 0", fontSize: 12, fontWeight: 800, color: rc }}>👑 {tx.rankMaxed}</p>
+                      )}
+                    </div>
+                  </div>
+                  <p style={{ margin: "10px 0 0", fontSize: 11, color: T.red, fontWeight: 700, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                    <span className="msym" style={{ fontSize: 15 }}>exercise</span>{tx.tapToCustomize}
+                  </p>
+                </section>
+              );
+            })()}
+
             <section onClick={speak}
               style={{ ...cardStyle, padding: 0, overflow: "hidden", position: "relative", cursor: "pointer", userSelect: "none" }}>
               {bubble && (
@@ -1463,7 +1643,7 @@ export default function App() {
               )}
               {/* 背景の巨大アウトライン文字 */}
               <p style={{ position: "absolute", top: 14, left: 0, right: 0, margin: 0, textAlign: "center", fontFamily: T.num, fontSize: 76, lineHeight: 1, color: "transparent", WebkitTextStroke: "1px #343940", letterSpacing: 3, pointerEvents: "none" }}>MACHO</p>
-              <div style={{ position: "relative" }}><MuscleCharacter levels={partLevels} /></div>
+              <div style={{ position: "relative" }}><MuscleCharacter levels={partLevels} appearance={data.appearance} /></div>
               <div style={{ textAlign: "center", padding: "12px 16px 16px" }}>
                 <h2 style={{ fontFamily: T.display, fontSize: 26, fontWeight: 400, margin: 0, letterSpacing: 1, color: T.ink, textShadow: T.emboss }}>{STAGES[stageIdx].name[lang]}</h2>
                 <p style={{ margin: "6px 0 0", fontSize: 13, color: T.sub }}>{STAGES[stageIdx].desc[lang]}</p>
@@ -2260,6 +2440,63 @@ export default function App() {
             <button onClick={() => setGoalModal(false)}
               style={{ padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
               {lang === "ja" ? "閉じる" : "Close"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 着せ替えポップアップ（ランクカードのタップで開く） */}
+      {customizeModal && (
+        <div onClick={() => setCustomizeModal(false)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(10,11,15,0.75)", zIndex: 60,
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+          }}>
+          <div role="dialog" aria-label={tx.customizeTitle} onClick={(e) => e.stopPropagation()}
+            style={{ ...cardStyle, width: "100%", maxWidth: 360, maxHeight: "85vh", overflowY: "auto", animation: "popIn 0.25s ease-out" }}>
+            <h3 style={{ ...h2Style, fontSize: 16, marginBottom: 4 }}>{tx.customizeTitle}</h3>
+            {/* プレビュー */}
+            <div style={{ maxWidth: 150, margin: "6px auto 4px" }}><MuscleCharacter levels={partLevels} appearance={data.appearance} /></div>
+            {[
+              { label: tx.accessoryLabel, items: ACCESSORIES, cur: (data.appearance || {}).accessory || "none", key: "accessory" },
+              { label: tx.auraLabel, items: AURAS, cur: (data.appearance || {}).aura || "none", key: "aura" },
+            ].map((row) => (
+              <div key={row.key} style={{ marginTop: 12 }}>
+                <p style={{ margin: "0 0 7px", fontSize: 12, fontWeight: 700, color: T.sub }}>{row.label}</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                  {row.items.map((it) => {
+                    const on = row.cur === it.id;
+                    const unlocked = isUnlocked(it.id);
+                    return (
+                      <button key={it.id} disabled={!unlocked}
+                        onClick={() => unlocked && changeAppearance({ [row.key]: it.id })}
+                        style={{
+                          padding: "8px 13px", borderRadius: 999, fontSize: 12.5, fontWeight: 800, fontFamily: T.body,
+                          border: `1.5px solid ${on ? T.red : T.line2}`,
+                          background: on ? T.redContainer : T.surface2,
+                          color: !unlocked ? "#5A6069" : on ? T.red : T.ink,
+                          boxShadow: on ? "none" : T.groove,
+                          cursor: unlocked ? "pointer" : "not-allowed",
+                        }}>
+                        {!unlocked && "🔒 "}{on ? "✓ " : ""}{it.name[lang]}
+                      </button>
+                    );
+                  })}
+                </div>
+                {(() => {
+                  const nextLocked = row.items.find((it) => !isUnlocked(it.id));
+                  if (!nextLocked) return null;
+                  const u = UNLOCKS[nextLocked.id];
+                  const t = u.stage !== undefined
+                    ? (lang === "ja" ? `🔒 ${nextLocked.name.ja}：ステージ「${STAGES[u.stage].name.ja}」で解放` : `🔒 ${nextLocked.name.en}: reach stage "${STAGES[u.stage].name.en}"`)
+                    : (lang === "ja" ? `🔒 ${nextLocked.name.ja}：${METAL_RANKS[u.rank].name.ja}ランクで解放` : `🔒 ${nextLocked.name.en}: reach ${METAL_RANKS[u.rank].name.en} rank`);
+                  return <p style={{ margin: "7px 0 0", fontSize: 10.5, color: T.sub2, lineHeight: 1.6 }}>{t}</p>;
+                })()}
+              </div>
+            ))}
+            <button onClick={() => setCustomizeModal(false)}
+              style={{ marginTop: 16, width: "100%", padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
+              {tx.close}
             </button>
           </div>
         </div>
