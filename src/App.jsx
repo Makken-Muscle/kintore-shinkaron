@@ -164,7 +164,8 @@ const ARTICLES = [
 // ============ デザイントークン（重厚版：金属背景 ＋ 落下の衝撃） ============
 const T = {
   bg: "#07080A",
-  pageGrad: "radial-gradient(120% 70% at 50% 0%,#16181D 0%,#0B0D10 55%,#07080A 100%)",
+  // クロスハッチの金属テクスチャ背景（トップ光沢＋斜め45°ヘアライン×2＋ベース放射グラデ）
+  pageGrad: "radial-gradient(110% 50% at 50% -6%, rgba(255,255,255,.09) 0%, rgba(255,255,255,0) 60%), repeating-linear-gradient(45deg, rgba(255,255,255,.05) 0 2px, rgba(0,0,0,.30) 2px 4px, rgba(255,255,255,0) 4px 26px), repeating-linear-gradient(-45deg, rgba(255,255,255,.045) 0 2px, rgba(0,0,0,.30) 2px 4px, rgba(255,255,255,0) 4px 26px), radial-gradient(120% 70% at 50% 0%, #24282E 0%, #14171C 52%, #08090B 100%)",
   surface: "#15171B",
   // ヘアライン金属パネル（走る光沢と組み合わせて使用）
   panel: "linear-gradient(160deg,#23262B 0%,#15171B 42%,#0D0F12 100%)",
@@ -676,10 +677,21 @@ function Heli({ size = 56, color = "#D9DCE0" }) {
   );
 }
 // ============ 共通スタイル（重厚メタル） ============
+// 四隅のリベット（背景レイヤーとして描画）
+const RIVET = "#AEB5BE 0%, #5C626A 45%, #20242A 60%, transparent 63%";
 const cardStyle = {
-  background: T.panel, borderRadius: 4, padding: 18,
-  border: `1px solid ${T.line}`,
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,.05), 0 2px 4px rgba(0,0,0,.5), 0 12px 28px rgba(0,0,0,.35)",
+  borderRadius: 3, padding: 18,
+  border: "1px solid #3E434A",
+  backgroundColor: "#15181C",
+  backgroundImage: [
+    `radial-gradient(circle 5px at 11px 11px, ${RIVET})`,
+    `radial-gradient(circle 5px at calc(100% - 11px) 11px, ${RIVET})`,
+    `radial-gradient(circle 5px at 11px calc(100% - 11px), ${RIVET})`,
+    `radial-gradient(circle 5px at calc(100% - 11px) calc(100% - 11px), ${RIVET})`,
+    "linear-gradient(180deg, rgba(255,255,255,.10) 0 1px, rgba(255,255,255,0) 1px)",
+    "linear-gradient(160deg,#2B2F35 0%,#1A1D22 44%,#0E1013 100%)",
+  ].join(", "),
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,.13), 0 3px 0 #0A0B0D, 0 14px 30px rgba(0,0,0,.55)",
 };
 const inputStyle = {
   width: "100%", padding: "14px 14px", borderRadius: 4,
@@ -1577,7 +1589,7 @@ export default function App() {
                 </div>
               </section>
 
-              <section style={{ ...cardStyle, background: `linear-gradient(180deg, ${T.surface} 0%, #171A21 100%)` }}>
+              <section style={cardStyle}>
                 <h3 style={{ ...h2Style, fontSize: 15, marginBottom: 4 }}>{isHeli ? tx.pileHeli : tx.pileTruck}</h3>
                 {truckCount === 0 ? (
                   <div style={{ textAlign: "center", padding: "26px 0", color: T.sub, fontSize: 13 }}>
