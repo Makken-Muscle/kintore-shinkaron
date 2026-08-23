@@ -725,6 +725,7 @@ export default function App() {
   const [bubble, setBubble] = useState(null);
   const bubbleTimer = useRef(null);
   const quakeRef = useRef({ last: 0, timer: null }); // 着地の衝撃で画面全体を揺らす
+  const shakeRef = useRef(null); // 揺らす対象（固定ナビは含めない＝ナビがずれないように）
   const [upgradeConfirm, setUpgradeConfirm] = useState(false);
   const [prCelebration, setPrCelebration] = useState(null); // { exercise, from, to }
   const [timer, setTimer] = useState({ total: 180, left: 180, running: false, endAt: null });
@@ -1046,9 +1047,9 @@ export default function App() {
     return { rows, overflow: truckCount - shown };
   }, [truckCount]);
 
-  // ---- 軽トラ着地の衝撃で画面全体を揺らす ----
+  // ---- 軽トラ着地の衝撃で画面を揺らす（固定ナビを含まないラッパーを揺らす） ----
   const screenQuake = () => {
-    const b = document.body;
+    const b = shakeRef.current;
     if (!b) return;
     const now = Date.now();
     if (now - quakeRef.current.last < 130) return; // 連続着地はスロットル
@@ -1075,8 +1076,7 @@ export default function App() {
     return () => {
       timers.forEach(clearTimeout);
       clearTimeout(q.timer);
-      document.body.style.animation = "";
-      document.body.style.willChange = "";
+      if (shakeRef.current) { shakeRef.current.style.animation = ""; shakeRef.current.style.willChange = ""; }
     };
   }, [tab, truckCount]); // eslint-disable-line
 
@@ -1128,6 +1128,9 @@ export default function App() {
         select option { background: #1A1D21; color: #F4F4F2; }
         @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
       `}</style>
+
+      {/* 揺らす対象（固定ナビ・モーダルは外に置く＝ナビがずれないように） */}
+      <div ref={shakeRef}>
 
       {/* ヘッダー（スタンプ調：傾いた赤ロゴ＋金バッジ＋掛け声ティッカー） */}
       <header style={{ position: "sticky", top: 0, zIndex: 30, background: T.bg, borderBottom: `2px solid ${T.line}` }}>
@@ -1881,6 +1884,7 @@ export default function App() {
         </p>
         <p style={{ margin: 0, fontSize: 11, color: "#6B7386" }}>© 2026 筋トレ進化論</p>
       </footer>
+      </div>{/* /揺らす対象 */}
 
       {/* 自己ベスト更新の祝福 */}
       {prCelebration && (
