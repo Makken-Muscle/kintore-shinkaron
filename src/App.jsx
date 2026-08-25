@@ -735,11 +735,18 @@ function MuscleCharacter({ levels, appearance }) {
 
 // ============ 軽トラSVG ============
 const RARE_TRUCK_COLORS = ["#E4482A", "#E8C33A", "#3DC98B", "#4E8CE8", "#B478E6", "#E87BA0", "#6FCEDC"];
-// 台ごとに固定の疑似乱数で、約10台に1台だけレアカラーに
+// index を強く撹拌する整数ハッシュ（splitmix32系。逐次値でもよく散らばる）
+const hash32 = (n) => {
+  let z = (n + 0x9e3779b9) | 0;
+  z = Math.imul(z ^ (z >>> 16), 0x21f0aaad);
+  z = Math.imul(z ^ (z >>> 15), 0x735a2d97);
+  z = z ^ (z >>> 15);
+  return z >>> 0;
+};
+// 台ごとに固定で、序盤からばらけて約10台に1台だけレアカラーに（色は独立ハッシュで選択）
 const truckColor = (i) => {
-  const h = ((i + 1) * 92821 + 4271) % 997;
-  if (h % 10 !== 0) return "#D9DCE0";
-  return RARE_TRUCK_COLORS[Math.floor(h / 10) % RARE_TRUCK_COLORS.length];
+  if (hash32(i + 1) % 10 !== 0) return "#D9DCE0"; // 約90%は通常色（銀白）
+  return RARE_TRUCK_COLORS[hash32(i + 1 + 777777) % RARE_TRUCK_COLORS.length];
 };
 
 function KeiTruck({ size = 56, color = "#D9DCE0" }) {
