@@ -94,6 +94,16 @@ const EXERCISE_PRESETS = [
 ];
 
 const HELI_KG = 2000; // ヘリコプター1機の重量目安（2t）
+const HEAT_STREAK = 5; // この連続回数以上でストリークカードが焼入れ状態になる
+// ストリーク焼入れ演出（残り火・最小）：火花2粒＋残り火2粒
+const SPARK_SPECS = [
+  { name: "spk5", left: "34%", top: "26%", w: 4, h: 1.2, dur: "3.2s", delay: "0s" },
+  { name: "spk6", left: "60%", top: "30%", w: 4, h: 1.2, dur: "3.4s", delay: "1.6s" },
+];
+const EMBER_SPECS = [
+  { left: "25%", dur: "2.7s", delay: "0s" },
+  { left: "62%", dur: "3.1s", delay: "1.4s" },
+];
 
 // HPS 6週間プログラム（月:H 筋肥大 / 水:P パワー / 金:S 筋力）
 const DAY_TYPES = {
@@ -774,19 +784,27 @@ function KeiTruck({ size = 56, color = "#D9DCE0" }) {
 function Heli({ size = 56, color = "#D9DCE0" }) {
   return (
     <svg viewBox="0 0 64 38" width={size} height={(size * 38) / 64} style={{ display: "block", filter: "drop-shadow(0 3px 4px rgba(0,0,0,.7))" }}>
-      {/* メインローター */}
-      <line x1="3" y1="5" x2="51" y2="5" stroke="#7C838C" strokeWidth="2" strokeLinecap="round" />
-      <rect x="25" y="5" width="4" height="5" rx="1" fill="#2C3036" />
-      {/* テールブーム */}
-      <path d="M 38 16 L 58 14.5 L 58 18.5 L 38 21 Z" fill={color} />
-      <rect x="56.5" y="7" width="2.5" height="9" rx="1" fill="#7C838C" />
-      {/* 機体 */}
-      <ellipse cx="26" cy="18.5" rx="15" ry="8.5" fill={color} />
-      <path d="M 32 12 Q 39.5 13.5 40.5 18.5 L 32 18.5 Z" fill="#39404A" opacity="0.92" />
+      {/* メインローターディスク（回転ブラー） */}
+      <ellipse cx="28" cy="5.5" rx="26" ry="2.2" fill="#AEB5BE" style={{ animation: "rotorBlur 1.1s ease-in-out infinite", transformOrigin: "28px 5.5px" }} />
+      <line x1="2" y1="5.5" x2="54" y2="5.5" stroke="#8A9199" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M 26 6 L 30 6 L 29.2 12 L 26.8 12 Z" fill="#2C3036" />
+      {/* テールブーム＋垂直尾翼 */}
+      <path d="M 40 17.4 L 58 16.4 L 58 19.2 L 40 20.4 Z" fill={color} />
+      <path d="M 55.5 8 L 60.5 9.2 L 59 17 L 55.5 17 Z" fill="#7C838C" />
+      <g style={{ animation: "tailSpin 0.5s linear infinite", transformOrigin: "57px 12.5px" }}>
+        <circle cx="57" cy="12.5" r="3.2" fill="none" stroke="#AEB5BE" strokeWidth="0.9" strokeDasharray="2 3" opacity="0.7" />
+      </g>
+      {/* 流線形の機体 */}
+      <path d="M 10 20.5 Q 10 12 22 11.4 Q 33 11 38.5 15.4 L 41.5 18.4 L 41.5 21.5 Q 41.5 26.6 34 27 L 17 27.4 Q 10 27.4 10 20.5 Z" fill={color} />
+      {/* キャノピー（機体の左上カーブに沿う） */}
+      <path d="M 25.6 12.8 Q 15.4 13.4 12.4 19.2 L 25.6 19.4 Z" fill="#39404A" opacity="0.92" />
+      {/* サイド窓 */}
+      <path d="M 28 15.2 Q 32.5 14.6 36.4 16.6 L 36.4 19.4 L 28 19.4 Z" fill="#39404A" opacity="0.55" />
       {/* スキッド */}
-      <line x1="15" y1="26" x2="17" y2="31" stroke="#2C3036" strokeWidth="2" />
-      <line x1="34" y1="26" x2="36" y2="31" stroke="#2C3036" strokeWidth="2" />
-      <line x1="12" y1="31.5" x2="41" y2="31.5" stroke="#2C3036" strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="16" y1="27" x2="13" y2="31.4" stroke="#2C3036" strokeWidth="1.9" />
+      <line x1="33" y1="27" x2="36" y2="31.4" stroke="#2C3036" strokeWidth="1.9" />
+      <line x1="10" y1="31.8" x2="40" y2="31.8" stroke="#2C3036" strokeWidth="2.2" strokeLinecap="round" />
+      <rect x="40" y="22.6" width="2.2" height="2.6" rx="0.7" fill="#E8C33A" />
     </svg>
   );
 }
@@ -1282,6 +1300,16 @@ export default function App() {
         /* キャラのオーラ */
         @keyframes auraPulse { 0%,100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.06); opacity: 1; } }
         @keyframes auraSpin { to { transform: rotate(360deg); } }
+        /* ヘリ：ローター回転 */
+        @keyframes rotorBlur { 0%,100% { opacity:.16; transform: scaleX(1); } 50% { opacity:.34; transform: scaleX(1.03); } }
+        @keyframes tailSpin { to { transform: rotate(360deg); } }
+        /* ストリーク5連続以上：鉄が熱される（残り火・最小） */
+        @keyframes heatInkEmber { 0%,100% { color:#C98A55; text-shadow:0 0 4px rgba(170,92,42,.42), 0 3px 0 #241308; } 50% { color:#DCA06A; text-shadow:0 0 6px rgba(186,108,52,.5), 0 3px 0 #241308; } }
+        @keyframes edgeHeatEmber { 0%,100% { box-shadow:inset 0 1px 0 rgba(255,255,255,.10), inset 0 0 14px rgba(150,74,32,.10), 0 3px 0 #0A0B0D, 0 14px 30px rgba(0,0,0,.55); border-color:#4A2E21; } 50% { box-shadow:inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 20px rgba(168,84,36,.16), 0 3px 0 #0A0B0D, 0 0 14px rgba(150,70,28,.14), 0 14px 30px rgba(0,0,0,.55); border-color:#603A27; } }
+        @keyframes forgeGlow { 0%,100% { opacity:.42; transform:scaleY(1); } 50% { opacity:.85; transform:scaleY(1.12); } }
+        @keyframes spk5 { 0% { opacity:0; transform:translate(0,0) scale(1);} 6% { opacity:1;} 60% { transform:translate(-14px,-30px) scale(.8);} 100% { opacity:0; transform:translate(-20px,10px) scale(.2);} }
+        @keyframes spk6 { 0% { opacity:0; transform:translate(0,0) scale(1);} 6% { opacity:1;} 60% { transform:translate(16px,-28px) scale(.8);} 100% { opacity:0; transform:translate(22px,12px) scale(.2);} }
+        @keyframes ember { 0% { opacity:0; transform:translate(0,0) scale(1);} 20% { opacity:.9;} 100% { opacity:0; transform:translate(6px,-46px) scale(.4);} }
         button { cursor: pointer; }
         input:focus, select:focus { border-color: #E4482A !important; box-shadow: inset 0 1px 3px rgba(0,0,0,.8), 0 0 0 2px rgba(228,72,42,.25) !important; }
         select option { background: #1A1D21; color: #F4F4F2; }
@@ -1348,14 +1376,70 @@ export default function App() {
           <div style={{ display: "grid", gap: 14 }}>
             {/* ストリーク＆今週 */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <section style={{ ...cardStyle, padding: "12px 14px", textAlign: "center" }}>
-                <p style={{ margin: 0, fontSize: 11, color: T.sub, fontWeight: 700, letterSpacing: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><span className="msym" style={{ fontSize: 15, color: T.red }}>local_fire_department</span>{tx.streak}</p>
-                <p style={{ margin: "2px 0 0" }}>
-                  <span style={{ fontFamily: T.num, fontSize: 30, color: streak > 0 ? T.yellow : T.sub }}>{streak}</span>
-                  <span style={{ fontSize: 13, marginLeft: 3 }}>{tx.streakUnit}</span>
-                </p>
-                <p style={{ margin: "2px 0 0", fontSize: 10, color: T.sub }}>{tx.streakNote}</p>
-              </section>
+              {(() => {
+                // 5連続以上で「鉄が熱される」状態（残り火・最小：振動なし／熱控えめ）
+                const heated = streak >= HEAT_STREAK;
+                return (
+                  <section style={{
+                    ...cardStyle, padding: "12px 14px", textAlign: "center",
+                    position: "relative", overflow: "hidden",
+                    ...(heated ? {
+                      border: "1px solid #4A2E21",
+                      backgroundImage: [
+                        `radial-gradient(circle 5px at 11px 11px, ${RIVET})`,
+                        `radial-gradient(circle 5px at calc(100% - 11px) 11px, ${RIVET})`,
+                        `radial-gradient(circle 5px at 11px calc(100% - 11px), ${RIVET})`,
+                        `radial-gradient(circle 5px at calc(100% - 11px) calc(100% - 11px), ${RIVET})`,
+                        "linear-gradient(180deg, rgba(255,255,255,.10) 0 1px, rgba(255,255,255,0) 1px)",
+                        "linear-gradient(160deg,#302620 0%,#1E1917 44%,#0E1013 100%)",
+                      ].join(","),
+                      animation: "edgeHeatEmber 6s ease-in-out infinite",
+                    } : null),
+                  }}>
+                    {heated && (
+                      <>
+                        {/* 下から差す炉光 */}
+                        <div aria-hidden style={{
+                          position: "absolute", left: 0, right: 0, bottom: 0, height: "56%",
+                          pointerEvents: "none", transformOrigin: "50% 100%", opacity: 0.26,
+                          background: "radial-gradient(120% 100% at 50% 118%, rgba(255,150,50,.55) 0%, rgba(255,90,20,.30) 38%, rgba(255,60,0,0) 72%)",
+                          animation: "forgeGlow 5s ease-in-out infinite", mixBlendMode: "screen",
+                        }} />
+                        {/* 立ちのぼる残り火 */}
+                        {EMBER_SPECS.map((e, i) => (
+                          <span key={i} aria-hidden style={{
+                            position: "absolute", left: e.left, bottom: 6, width: 2, height: 2, borderRadius: 999,
+                            background: "#D9A268", boxShadow: "0 0 4px rgba(196,120,58,.6)", pointerEvents: "none",
+                            animation: `ember ${e.dur} linear infinite`, animationDelay: e.delay,
+                          }} />
+                        ))}
+                      </>
+                    )}
+                    <p style={{ position: "relative", margin: 0, fontSize: 11, color: heated ? "#D6B79A" : T.sub, fontWeight: 700, letterSpacing: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                      <span className="msym" style={{ fontSize: 15, color: heated ? "#D9884A" : T.red, textShadow: heated ? "0 0 7px rgba(190,100,48,.5)" : undefined, fontVariationSettings: heated ? "'FILL' 1" : undefined }}>local_fire_department</span>{tx.streak}
+                    </p>
+                    <p style={{ position: "relative", margin: "2px 0 0" }}>
+                      <span style={{
+                        position: "relative", display: "inline-block", fontFamily: T.num, fontSize: 30,
+                        color: streak > 0 ? T.yellow : T.sub,
+                        ...(heated ? { animation: "heatInkEmber 4.2s ease-in-out infinite" } : null),
+                      }}>
+                        {streak}
+                        {heated && SPARK_SPECS.map((sp, i) => (
+                          <span key={i} aria-hidden style={{
+                            position: "absolute", left: sp.left, top: sp.top, width: sp.w, height: sp.h, borderRadius: 999,
+                            background: "linear-gradient(90deg,#F2C287,#D08340 55%,rgba(168,72,24,0))",
+                            boxShadow: "0 0 4px rgba(208,131,64,.6)", pointerEvents: "none",
+                            animation: `${sp.name} ${sp.dur} ease-out infinite`, animationDelay: sp.delay,
+                          }} />
+                        ))}
+                      </span>
+                      <span style={{ fontSize: 13, marginLeft: 3, color: heated ? "#E8D6C6" : undefined }}>{tx.streakUnit}</span>
+                    </p>
+                    <p style={{ position: "relative", margin: "2px 0 0", fontSize: 10, color: heated ? "#C99A72" : T.sub }}>{tx.streakNote}</p>
+                  </section>
+                );
+              })()}
               {/* 目標統合カード（通常は今週の日数、目標設定中は進捗。タップで目標ポップアップ） */}
               <section onClick={() => setGoalModal(true)} role="button" aria-label={tx.goalOpenAria}
                 style={{ ...cardStyle, padding: "12px 14px", textAlign: "center", cursor: "pointer", position: "relative", borderTop: data.goal ? `2px solid ${data.goal.rewarded ? T.green : T.red}` : undefined }}>
