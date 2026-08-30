@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useId } from "react";
 
 // ============ 定数 ============
 const STORAGE_KEY = "kintore-shinkaron:data";
@@ -535,6 +535,7 @@ function limbPath(points, widths) {
 }
 
 function MuscleCharacter({ levels, appearance }) {
+  const uid = useId(); // このインスタンス固有のグラデid（複数表示時のid衝突・再描画不具合を防ぐ）
   const { chest, shoulder, arm, back, leg, abs } = levels;
   const mAvg = (chest + shoulder + arm + back + leg + abs) / 6;
   const acc = appearance?.accessory || "none";
@@ -580,33 +581,33 @@ function MuscleCharacter({ levels, appearance }) {
   return (
     <svg viewBox="0 0 200 240" style={{ width: "100%", maxWidth: 230, display: "block", margin: "0 auto" }}>
       <defs>
-        <radialGradient id="spot" cx="50%" cy="30%" r="75%">
+        <radialGradient id={`${uid}-spot`} cx="50%" cy="30%" r="75%">
           <stop offset="0%" stopColor="#262A30" />
           <stop offset="55%" stopColor="#121417" />
           <stop offset="100%" stopColor="#0A0B0D" />
         </radialGradient>
-        <radialGradient id="aura-ember" cx="50%" cy="50%" r="52%">
+        <radialGradient id={`${uid}-aura-ember`} cx="50%" cy="50%" r="52%">
           <stop offset="0%" stopColor="#FF6A3C" stopOpacity="0" />
           <stop offset="58%" stopColor="#FF3B1F" stopOpacity="0.34" />
           <stop offset="100%" stopColor="#FF3B1F" stopOpacity="0" />
         </radialGradient>
-        <radialGradient id="aura-gold" cx="50%" cy="50%" r="52%">
+        <radialGradient id={`${uid}-aura-gold`} cx="50%" cy="50%" r="52%">
           <stop offset="0%" stopColor="#FFE07A" stopOpacity="0" />
           <stop offset="56%" stopColor="#E8C33A" stopOpacity="0.4" />
           <stop offset="100%" stopColor="#E8C33A" stopOpacity="0" />
         </radialGradient>
-        <radialGradient id="aura-holo" cx="50%" cy="50%" r="52%">
+        <radialGradient id={`${uid}-aura-holo`} cx="50%" cy="50%" r="52%">
           <stop offset="0%" stopColor="#7FE3EF" stopOpacity="0" />
           <stop offset="45%" stopColor="#7FE3EF" stopOpacity="0.30" />
           <stop offset="72%" stopColor="#C77DFF" stopOpacity="0.30" />
           <stop offset="100%" stopColor="#FF7BAC" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <rect x="0" y="0" width="200" height="240" fill="url(#spot)" />
-      {/* オーラ（キャラ背後の発光） */}
+      <rect x="0" y="0" width="200" height="240" fill={`url(#${uid}-spot)`} />
+      {/* オーラ（キャラ背後の発光）。key={aura}で切替時に要素を作り直し確実に再描画 */}
       {aura !== "none" && (
-        <g style={{ transformOrigin: "100px 122px", animation: aura === "holo" ? "auraSpin 8s linear infinite" : "auraPulse 2.8s ease-in-out infinite" }}>
-          <ellipse cx="100" cy="122" rx="90" ry="118" fill={`url(#aura-${aura})`} />
+        <g key={aura} style={{ transformOrigin: "100px 122px", animation: aura === "holo" ? "auraSpin 8s linear infinite" : "auraPulse 2.8s ease-in-out infinite" }}>
+          <ellipse cx="100" cy="122" rx="90" ry="118" fill={`url(#${uid}-aura-${aura})`} />
         </g>
       )}
       <polygon points="70,0 130,0 168,215 32,215" fill="#E8C33A" opacity="0.06" />
@@ -877,6 +878,7 @@ export default function App() {
   const [goalTarget, setGoalTarget] = useState(6);
   const [goalModal, setGoalModal] = useState(false); // 目標の作成・進捗・履歴ポップアップ
   const [customizeModal, setCustomizeModal] = useState(false); // キャラ着せ替えポップアップ
+  const [langMenu, setLangMenu] = useState(false); // 言語選択ドロップダウン
 
   useEffect(() => {
     (async () => {
@@ -1192,6 +1194,14 @@ export default function App() {
   };
   const changeAppearance = (patch) => save({ ...data, appearance: { ...(data.appearance || { accessory: "none", aura: "none" }), ...patch } });
 
+  // 言語メニュー：外側クリックで閉じる（開いた瞬間のクリックで即閉じないよう次tickで登録）
+  useEffect(() => {
+    if (!langMenu) return;
+    const close = () => setLangMenu(false);
+    const t = setTimeout(() => document.addEventListener("click", close), 0);
+    return () => { clearTimeout(t); document.removeEventListener("click", close); };
+  }, [langMenu]);
+
   // ---- 乗り物をヘリコプターへアップグレード ----
   const upgradeToHeli = () => {
     save({ ...data, vehicle: { type: "heli", resetBase: totalVolume } });
@@ -1336,18 +1346,44 @@ export default function App() {
               <p style={{ margin: "2px 0 0", fontFamily: T.num, fontSize: 10, letterSpacing: 3.5, color: T.sub2, lineHeight: 1 }}>MUSCLE EVOLUTION</p>
             </div>
           </div>
-          {/* 右：言語トグル＋ステージバッジ（傾いた金スタンプ） */}
+          {/* 右：言語メニュー＋ステージバッジ（傾いた金スタンプ） */}
           <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 8 }}>
-            <button onClick={() => changeLang(lang === "ja" ? "en" : "ja")}
-              aria-label={lang === "ja" ? "Switch to English" : "日本語に切り替え"}
-              style={{
-                flex: "none", border: `1px solid ${T.line2}`, background: T.surface2, color: T.ink,
-                fontFamily: T.cond, fontWeight: 700, fontSize: 11, letterSpacing: 1,
-                padding: "6px 9px", borderRadius: 4, whiteSpace: "nowrap", lineHeight: 1,
-                display: "flex", alignItems: "center", gap: 4,
-              }}>
-              <span style={{ fontSize: 12 }}>🌐</span>{lang === "ja" ? "EN" : "日本語"}
-            </button>
+            <div style={{ position: "relative", flex: "none" }}>
+              <button onClick={(e) => { e.stopPropagation(); setLangMenu((v) => !v); }}
+                aria-label="Language" aria-expanded={langMenu}
+                style={{
+                  flex: "none", border: `1px solid ${langMenu ? T.red : T.line2}`, background: T.surface2, color: T.ink,
+                  fontFamily: T.cond, fontWeight: 700, fontSize: 11, letterSpacing: 1,
+                  padding: "6px 9px", borderRadius: 4, whiteSpace: "nowrap", lineHeight: 1,
+                  display: "flex", alignItems: "center", gap: 4,
+                }}>
+                <span style={{ fontSize: 12 }}>🌐</span>Lang<span style={{ fontSize: 9, marginLeft: 1 }}>▾</span>
+              </button>
+              {langMenu && (
+                <div onClick={(e) => e.stopPropagation()} role="menu"
+                  style={{
+                    position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 50, minWidth: 128,
+                    background: "#15181C", border: `1px solid ${T.line2}`, borderRadius: 4,
+                    boxShadow: "0 8px 22px rgba(0,0,0,.6)", overflow: "hidden",
+                  }}>
+                  {[{ id: "ja", label: "日本語" }, { id: "en", label: "English" }].map((o) => {
+                    const on = lang === o.id;
+                    return (
+                      <button key={o.id} role="menuitemradio" aria-checked={on}
+                        onClick={() => { changeLang(o.id); setLangMenu(false); }}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left",
+                          padding: "11px 13px", border: "none", borderBottom: o.id === "ja" ? `1px solid ${T.line}` : "none",
+                          background: on ? T.redContainer : "transparent",
+                          color: on ? T.red : T.ink, fontFamily: T.body, fontWeight: 800, fontSize: 13.5, whiteSpace: "nowrap",
+                        }}>
+                        <span style={{ width: 14, display: "inline-block", color: T.red }}>{on ? "✓" : ""}</span>{o.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             <span style={{
               flex: "none", fontFamily: T.display, fontWeight: 400, fontSize: 11,
               padding: "7px 10px", background: T.yellow, color: "#17140A",
@@ -1380,7 +1416,7 @@ export default function App() {
                 // 5連続以上で「鉄が熱される」状態（残り火・最小：振動なし／熱控えめ）
                 const heated = streak >= HEAT_STREAK;
                 return (
-                  <section style={{
+                  <section key={lang} style={{
                     ...cardStyle, padding: "12px 14px", textAlign: "center",
                     position: "relative", overflow: "hidden",
                     ...(heated ? {
