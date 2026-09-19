@@ -879,6 +879,7 @@ export default function App() {
   const [goalModal, setGoalModal] = useState(false); // 目標の作成・進捗・履歴ポップアップ
   const [customizeModal, setCustomizeModal] = useState(false); // キャラ着せ替えポップアップ
   const [langMenu, setLangMenu] = useState(false); // 言語選択ドロップダウン
+  const [myExModal, setMyExModal] = useState(false); // マイ種目の管理ポップアップ
 
   useEffect(() => {
     (async () => {
@@ -1639,31 +1640,16 @@ export default function App() {
               </div>
             </section>
 
-            {/* マイ種目の管理 */}
+            {/* マイ種目の管理（ポップアップで開く） */}
             {data.customExercises.length > 0 && (
-              <section style={cardStyle}>
-                <h3 style={{ ...h2Style, fontSize: 15, display: "flex", alignItems: "center", gap: 7 }}><span className="msym" style={{ fontSize: 19, color: T.red }}>list_alt</span>{tx.myExTitle}</h3>
-                <p style={{ fontSize: 12, color: T.sub, margin: "6px 0 4px" }}>
-                  {tx.myExNote}
-                </p>
-                {data.customExercises.map((c) => (
-                  <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderTop: `1px solid ${T.line}`, marginTop: 8 }}>
-                    <div>
-                      <strong style={{ fontWeight: 700 }}>{c.name}</strong>
-                      <div style={{ display: "flex", gap: 5, marginTop: 5, flexWrap: "wrap" }}>
-                        {c.parts.map((p) => (
-                          <span key={p} style={{
-                            fontSize: 10, fontWeight: 800, padding: "2px 9px", borderRadius: 999,
-                            border: `1px solid ${PART_COLORS[p]}`, color: PART_COLORS[p],
-                          }}>{PART_LABELS[lang][p]}</span>
-                        ))}
-                      </div>
-                    </div>
-                    <button onClick={() => setDeleteExTarget(c)} aria-label={tx.delMyExAria}
-                      style={{ border: "none", background: "none", color: "#555C6E", fontSize: 18, padding: 4 }}>✕</button>
-                  </div>
-                ))}
-              </section>
+              <button onClick={() => setMyExModal(true)}
+                style={{ ...cardStyle, width: "100%", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "14px 18px" }}>
+                <span style={{ ...h2Style, fontSize: 15, display: "flex", alignItems: "center", gap: 7 }}>
+                  <span className="msym" style={{ fontSize: 19, color: T.red }}>list_alt</span>{tx.myExTitle}
+                  <span style={{ fontFamily: T.num, fontSize: 16, color: T.yellow, marginLeft: 2 }}>{data.customExercises.length}</span>
+                </span>
+                <span className="msym" style={{ fontSize: 20, color: T.sub }}>settings</span>
+              </button>
             )}
 
             {grouped.length === 0 ? (
@@ -2622,6 +2608,44 @@ export default function App() {
               </div>
             ))}
             <button onClick={() => setCustomizeModal(false)}
+              style={{ marginTop: 16, width: "100%", padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
+              {tx.close}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* マイ種目の管理ポップアップ */}
+      {myExModal && (
+        <div onClick={() => setMyExModal(false)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(10,11,15,0.75)", zIndex: 60,
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+          }}>
+          <div role="dialog" aria-label={tx.myExTitle} onClick={(e) => e.stopPropagation()}
+            style={{ ...cardStyle, width: "100%", maxWidth: 360, maxHeight: "85vh", overflowY: "auto", animation: "popIn 0.25s ease-out" }}>
+            <h3 style={{ ...h2Style, fontSize: 16, display: "flex", alignItems: "center", gap: 7 }}><span className="msym" style={{ fontSize: 19, color: T.red }}>list_alt</span>{tx.myExTitle}</h3>
+            <p style={{ fontSize: 12, color: T.sub, margin: "6px 0 4px" }}>{tx.myExNote}</p>
+            {data.customExercises.length === 0 ? (
+              <p style={{ fontSize: 13, color: T.sub2, margin: "12px 0", textAlign: "center" }}>—</p>
+            ) : data.customExercises.map((c) => (
+              <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderTop: `1px solid ${T.line}`, marginTop: 8 }}>
+                <div>
+                  <strong style={{ fontWeight: 700 }}>{c.name}</strong>
+                  <div style={{ display: "flex", gap: 5, marginTop: 5, flexWrap: "wrap" }}>
+                    {c.parts.map((p) => (
+                      <span key={p} style={{
+                        fontSize: 10, fontWeight: 800, padding: "2px 9px", borderRadius: 999,
+                        border: `1px solid ${PART_COLORS[p]}`, color: PART_COLORS[p],
+                      }}>{PART_LABELS[lang][p]}</span>
+                    ))}
+                  </div>
+                </div>
+                <button onClick={() => setDeleteExTarget(c)} aria-label={tx.delMyExAria}
+                  style={{ border: "none", background: "none", color: "#555C6E", fontSize: 18, padding: 4 }}>✕</button>
+              </div>
+            ))}
+            <button onClick={() => setMyExModal(false)}
               style={{ marginTop: 16, width: "100%", padding: "12px", borderRadius: 10, border: `1.5px solid ${T.line}`, background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
               {tx.close}
             </button>
