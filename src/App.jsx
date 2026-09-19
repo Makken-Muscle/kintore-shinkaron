@@ -366,7 +366,7 @@ const TXT = {
     // 記録
     streak: "ストリーク", streakUnit: "回連続", streakNote: "中2日以内なら継続",
     thisWeek: "今週", dayUnit: "日", weekNote: "月曜はじまり",
-    intervalTimer: "インターバルタイマー", pause: "⏸ 一時停止", resume: "▶ 再開", reset: "↺ リセット",
+    intervalTimer: "インターバルタイマー", pause: "一時停止", resume: "再開", reset: "リセット",
     timerHint: "HPSの目安: 筋肥大60〜90秒 ／ パワー3分（爆発的挙上）／ 筋力5分",
     recordTitle: "今日のトレーニングを記録",
     grpBasic: "基本種目", grpCustom: "マイ種目", addNewEx: "＋ 新しい種目を追加",
@@ -377,11 +377,11 @@ const TXT = {
     addExNote: "追加した種目はこの端末だけに保存され、選んだ部位の成長に反映されます。",
     fWeight: "重量", fReps: "レップ", fSets: "セット", phKg: "kg", phReps: "回", phSets: "セット",
     recordBtn: "記録する",
-    myExTitle: "💪 マイ種目", myExNote: "削除しても、過去の記録とキャラの成長はそのまま残ります。",
+    myExTitle: "マイ種目", myExNote: "削除しても、過去の記録とキャラの成長はそのまま残ります。",
     emptyLogs1: "まだ記録がありません。", emptyLogs2: "最初の1セットが進化の始まりです。",
     uKg: "kg", uReps: "回", uSets: "セット", delAria: "削除", delMyExAria: "マイ種目を削除",
     // 進化
-    tapToSpeak: "👆 タップすると喋ります",
+    tapToSpeak: "タップすると喋ります",
     trainingDays: "トレーニング日数",
     growthTitle: "部位別の成長度",
     growthNote: "記録した種目の部位だけが育ちます。偏るとキャラも偏った体型に…！",
@@ -399,7 +399,7 @@ const TXT = {
     planTitle: "HPS 6週間プログラム",
     rmBench: "ベンチ", rmSquat: "スクワット", rmDead: "デッド", rm1: "1RM",
     makePlan: "6週間の計画を作る", remakePlan: "計画を作り直す",
-    weightTapHint: "👆 重量をタップすると、その場で実績を記録できます",
+    weightTapHint: "重量をタップすると、その場で実績を記録できます",
     planFootnote: "※ 週が進むほど水曜・金曜の強度が上がります。体調に合わせて重量は無理なく調整し、フォームが崩れたらその日は終了してください。",
     setsUnit: "セット",
     // 目標
@@ -423,12 +423,12 @@ const TXT = {
     fGuide: "使い方ガイド", fColumns: "コラム", fContact: "お問い合わせ", fPrivacy: "プライバシーポリシー",
     // ダイアログ／トースト
     prTitle: "自己ベスト更新！！", tapClose: "タップして閉じる",
-    timerDone: "🔔 インターバル終了！次のセット！",
+    timerDone: "インターバル終了！次のセット！",
     upTitle: "🚁 ヘリコプターに変更しますか？", cancel: "キャンセル",
     importTitle: "このデータで復元しますか？",
     iRecords: "記録件数", iTitles: "称号", iGoals: "目標履歴", restoreBtn: "復元する",
     delTitle: "この記録を削除しますか？", delIrreversible: "削除すると元に戻せません。", delBtn: "削除する",
-    planSavedToast: "✅ 記録しました！「記録」タブで確認できます",
+    planSavedToast: "記録しました！「記録」タブで確認できます",
     delExTitle: "このマイ種目を削除しますか？",
     delExNote: "種目の選択肢から消えるだけで、この種目で記録したトレーニングとキャラの成長は残ります。",
     celebTitle: "🏆 目標達成！称号獲得 🏆",
@@ -443,7 +443,7 @@ const TXT = {
     langLabel: "言語 / Language",
     streak: "Streak", streakUnit: "in a row", streakNote: "Continues within a 3-day gap",
     thisWeek: "This Week", dayUnit: "days", weekNote: "Starts Monday",
-    intervalTimer: "Interval Timer", pause: "⏸ Pause", resume: "▶ Resume", reset: "↺ Reset",
+    intervalTimer: "Interval Timer", pause: "Pause", resume: "Resume", reset: "Reset",
     timerHint: "HPS guide: Hypertrophy 60–90s / Power 3 min (explosive) / Strength 5 min",
     recordTitle: "Log today's workout",
     grpBasic: "Basic exercises", grpCustom: "My exercises", addNewEx: "＋ Add a new exercise",
@@ -454,10 +454,10 @@ const TXT = {
     addExNote: "Added exercises are saved on this device only and count toward the selected muscles' growth.",
     fWeight: "Weight", fReps: "Reps", fSets: "Sets", phKg: "kg", phReps: "reps", phSets: "sets",
     recordBtn: "Record",
-    myExTitle: "💪 My Exercises", myExNote: "Deleting one keeps your past logs and character growth intact.",
+    myExTitle: "My Exercises", myExNote: "Deleting one keeps your past logs and character growth intact.",
     emptyLogs1: "No logs yet.", emptyLogs2: "Your first set is the start of your evolution.",
     uKg: "kg", uReps: " reps", uSets: " sets", delAria: "Delete", delMyExAria: "Delete my exercise",
-    tapToSpeak: "👆 Tap to make it speak",
+    tapToSpeak: "Tap to make it speak",
     trainingDays: "Training days",
     growthTitle: "Muscle growth by area",
     growthNote: "Only the muscles you train grow. Skew your training and your character gets lopsided…!",
@@ -473,7 +473,7 @@ const TXT = {
     planTitle: "HPS 6-Week Program",
     rmBench: "Bench", rmSquat: "Squat", rmDead: "Deadlift", rm1: "1RM",
     makePlan: "Create 6-week plan", remakePlan: "Rebuild plan",
-    weightTapHint: "👆 Tap a weight to log your actual set on the spot",
+    weightTapHint: "Tap a weight to log your actual set on the spot",
     planFootnote: "* Wednesday and Friday intensity rises as the weeks progress. Adjust weights to how you feel, and stop for the day if your form breaks down.",
     setsUnit: "sets",
     setGoalTitle: "Set a 2-week goal",
@@ -493,12 +493,12 @@ const TXT = {
     restoreWarn1: "* Restoring will ", restoreWarn2: "replace all your current logs", restoreWarn3: " with the file's contents. If you have important logs, export a backup first.",
     fGuide: "Guide", fColumns: "Columns", fContact: "Contact", fPrivacy: "Privacy Policy",
     prTitle: "New personal best!!", tapClose: "Tap to close",
-    timerDone: "🔔 Rest over! Next set!",
+    timerDone: "Rest over! Next set!",
     upTitle: "🚁 Upgrade to a helicopter?", cancel: "Cancel",
     importTitle: "Restore with this data?",
     iRecords: "Logs", iTitles: "Titles", iGoals: "Goal history", restoreBtn: "Restore",
     delTitle: "Delete this log?", delIrreversible: "This can't be undone.", delBtn: "Delete",
-    planSavedToast: "✅ Logged! Check it in the Record tab.",
+    planSavedToast: "Logged! Check it in the Record tab.",
     delExTitle: "Delete this exercise?",
     delExNote: "It's only removed from the picker—the workouts you logged with it and your character growth remain.",
     celebTitle: "🏆 Goal cleared! Title earned 🏆",
@@ -1288,7 +1288,7 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: T.pageGrad, fontFamily: T.body, color: T.ink, paddingBottom: 92 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700&family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0..1,0&icon_names=calendar_month,date_range,edit_note,exercise,fitness_center,helicopter,local_fire_department,local_shipping,menu_book,military_tech,settings,timer,trophy&display=block');
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0..1,0&icon_names=calendar_month,check_circle,date_range,edit_note,exercise,fitness_center,helicopter,lightbulb,list_alt,local_fire_department,local_shipping,menu_book,military_tech,notifications_active,pause,play_arrow,restart_alt,settings,timer,trophy&display=block');
         /* Viteテンプレートやブラウザ標準の余白・背景を打ち消す（スマホの白枠対策） */
         html, body { margin: 0 !important; padding: 0 !important; background: #07080A !important; }
         body { overflow-x: hidden; }
@@ -1546,21 +1546,22 @@ export default function App() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
                 {timer.running ? (
                   <button onClick={pauseTimer}
-                    style={{ padding: "11px", borderRadius: 10, border: "none", background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                    {tx.pause}
+                    style={{ padding: "11px", borderRadius: 10, border: "none", background: T.surface2, color: T.ink, fontWeight: 800, fontFamily: T.body, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                    <span className="msym" style={{ fontSize: 18 }}>pause</span>{tx.pause}
                   </button>
                 ) : (
                   <button onClick={resumeTimer} disabled={timer.left === 0 || timer.left === timer.total}
                     style={{
                       padding: "11px", borderRadius: 10, border: "none", fontWeight: 800, fontFamily: T.body, fontSize: 14,
                       background: T.surface2, color: timer.left === 0 || timer.left === timer.total ? "#555C6E" : T.green,
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                     }}>
-                    {tx.resume}
+                    <span className="msym on" style={{ fontSize: 18 }}>play_arrow</span>{tx.resume}
                   </button>
                 )}
                 <button onClick={resetTimer}
-                  style={{ padding: "11px", borderRadius: 10, border: "none", background: T.surface2, color: T.sub, fontWeight: 800, fontFamily: T.body, fontSize: 14 }}>
-                  {tx.reset}
+                  style={{ padding: "11px", borderRadius: 10, border: "none", background: T.surface2, color: T.sub, fontWeight: 800, fontFamily: T.body, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                  <span className="msym" style={{ fontSize: 18 }}>restart_alt</span>{tx.reset}
                 </button>
               </div>
             </section>
@@ -1641,7 +1642,7 @@ export default function App() {
             {/* マイ種目の管理 */}
             {data.customExercises.length > 0 && (
               <section style={cardStyle}>
-                <h3 style={{ ...h2Style, fontSize: 15 }}>{tx.myExTitle}</h3>
+                <h3 style={{ ...h2Style, fontSize: 15, display: "flex", alignItems: "center", gap: 7 }}><span className="msym" style={{ fontSize: 19, color: T.red }}>list_alt</span>{tx.myExTitle}</h3>
                 <p style={{ fontSize: 12, color: T.sub, margin: "6px 0 4px" }}>
                   {tx.myExNote}
                 </p>
@@ -1995,10 +1996,11 @@ export default function App() {
                 {data.plan ? tx.remakePlan : tx.makePlan}
               </button>
               {data.plan && (
-                <p style={{ margin: "10px 0 0", fontSize: 11, color: T.sub, textAlign: "center" }}>
+                <p style={{ margin: "10px 0 0", fontSize: 11, color: T.sub, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                  <span className="msym" style={{ fontSize: 15, color: T.green }}>check_circle</span>
                   {lang === "ja"
-                    ? `✓ 保存済み（${fmtDate(data.plan.createdAt)}作成）— アプリを閉じても消えません`
-                    : `✓ Saved (created ${fmtDate(data.plan.createdAt)}) — persists after you close the app`}
+                    ? `保存済み（${fmtDate(data.plan.createdAt)}作成）— アプリを閉じても消えません`
+                    : `Saved (created ${fmtDate(data.plan.createdAt)}) — persists after you close the app`}
                 </p>
               )}
             </section>
@@ -2060,9 +2062,10 @@ export default function App() {
                                     style={{
                                       background: T.surface2, border: `1px solid ${T.line}`, borderRadius: 8,
                                       padding: "6px 10px", fontSize: 13, fontWeight: 700, fontFamily: T.body, color: T.ink,
+                                      display: "inline-flex", alignItems: "center", gap: 4,
                                     }}>
                                     {n} <span style={{ fontFamily: T.num, fontSize: 15, color: t.color }}>{kg}</span>kg
-                                    <span style={{ fontSize: 12, marginLeft: 4 }}>📝</span>
+                                    <span className="msym" style={{ fontSize: 16, color: T.sub2, marginLeft: 2 }}>edit_note</span>
                                   </button>
                                 );
                               })}
@@ -2072,7 +2075,7 @@ export default function App() {
                           </p>
                         </>
                       )}
-                      <p style={{ margin: "10px 0 0", fontSize: 12, background: T.surface2, padding: "8px 11px", borderRadius: 8, color: T.sub }}>💡 {t.tip[lang]}</p>
+                      <p style={{ margin: "10px 0 0", fontSize: 12, background: T.surface2, padding: "8px 11px", borderRadius: 8, color: T.sub, display: "flex", gap: 7, alignItems: "flex-start", lineHeight: 1.6 }}><span className="msym" style={{ fontSize: 16, color: T.yellow, flex: "none", marginTop: 1 }}>lightbulb</span>{t.tip[lang]}</p>
                     </section>
                   );
                 })}
@@ -2235,9 +2238,9 @@ export default function App() {
           zIndex: 55, animation: "popIn 0.3s ease-out",
           background: T.green, color: "#0D0F13", fontWeight: 900, fontSize: 15,
           padding: "13px 22px", borderRadius: 14, boxShadow: "0 6px 20px rgba(61,220,151,0.4)",
-          whiteSpace: "nowrap",
+          whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6,
         }}>
-          {tx.timerDone}
+          <span className="msym" style={{ fontSize: 18 }}>notifications_active</span>{tx.timerDone}
         </div>
       )}
 
@@ -2366,7 +2369,7 @@ export default function App() {
           }}>
           <div role="dialog" aria-label="実績の記録" onClick={(e) => e.stopPropagation()}
             style={{ ...cardStyle, width: "100%", maxWidth: 340, animation: "popIn 0.25s ease-out", borderLeft: `5px solid ${planRecord.color}` }}>
-            <h3 style={{ ...h2Style, fontSize: 16 }}>{lang === "ja" ? `📝 ${exName(planRecord.exercise, lang)} を記録` : `📝 Log ${exName(planRecord.exercise, lang)}`}</h3>
+            <h3 style={{ ...h2Style, fontSize: 16, display: "flex", alignItems: "center", gap: 6 }}><span className="msym" style={{ fontSize: 18, color: T.sub2 }}>edit_note</span>{lang === "ja" ? `${exName(planRecord.exercise, lang)} を記録` : `Log ${exName(planRecord.exercise, lang)}`}</h3>
             <p style={{ fontSize: 12, color: T.sub, margin: "8px 0 12px" }}>
               {lang === "ja"
                 ? <>{planRecord.day}（{planRecord.typeName}）のメニュー：<strong style={{ color: planRecord.color }}>{planRecord.menu}</strong></>
@@ -2412,9 +2415,9 @@ export default function App() {
           zIndex: 55, animation: "popIn 0.3s ease-out",
           background: T.green, color: "#0D0F13", fontWeight: 900, fontSize: 14,
           padding: "13px 22px", borderRadius: 14, boxShadow: "0 6px 20px rgba(61,220,151,0.4)",
-          whiteSpace: "nowrap",
+          whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6,
         }}>
-          {tx.planSavedToast}
+          <span className="msym" style={{ fontSize: 17 }}>check_circle</span>{tx.planSavedToast}
         </div>
       )}
 
