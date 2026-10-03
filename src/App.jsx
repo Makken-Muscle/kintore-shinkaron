@@ -291,25 +291,27 @@ async function storageSet(key, value) {
 }
 
 // ============ 部位判定 ============
-const ALL_PARTS = ["chest", "shoulder", "arm", "back", "leg", "abs"];
+const ALL_PARTS = ["chest", "shoulder", "arm", "back", "leg", "glute", "abs"];
 const PART_LABELS = {
-  ja: { chest: "胸", shoulder: "肩", arm: "腕", back: "背中", leg: "脚", abs: "腹筋" },
-  en: { chest: "Chest", shoulder: "Shoulders", arm: "Arms", back: "Back", leg: "Legs", abs: "Abs" },
+  ja: { chest: "胸", shoulder: "肩", arm: "腕", back: "背中", leg: "脚", glute: "お尻", abs: "腹筋" },
+  en: { chest: "Chest", shoulder: "Shoulders", arm: "Arms", back: "Back", leg: "Legs", glute: "Glutes", abs: "Abs" },
 };
-const PART_COLORS = { chest: "#F05C3D", shoulder: "#E8C33A", arm: "#B478E6", back: "#5B9BFF", leg: "#3DC98B", abs: "#6FCEDC" };
+const PART_COLORS = { chest: "#F05C3D", shoulder: "#E8C33A", arm: "#B478E6", back: "#5B9BFF", leg: "#3DC98B", glute: "#FF7BAC", abs: "#6FCEDC" };
 // 日本語・英語どちらの種目名でも部位を判定できるよう英語キーワードも追加（iフラグ）
 const PART_RULES = [
-  { re: /デッド|deadlift/i, parts: [["back", 0.5], ["leg", 0.5]] },
+  { re: /デッド|deadlift/i, parts: [["back", 0.45], ["leg", 0.3], ["glute", 0.25]] },
   { re: /腹|クランチ|プランク|アブ|レッグレイズ|ab\s*crunch|crunch|plank|sit-?up|leg\s*raise/i, parts: [["abs", 1]] },
   { re: /ベンチ|チェスト|フライ|腕立て|プッシュアップ|胸|bench|chest|fly|push-?up/i, parts: [["chest", 1]] },
   { re: /ラット|プル|懸垂|チンニング|ロウ|背|lat|pulldown|pull-?up|chin-?up|row/i, parts: [["back", 1]] },
-  { re: /ショルダー|レイズ|オーバーヘッド|肩|shoulder|overhead|lateral\s*raise|delt/i, parts: [["shoulder", 1]] },
-  { re: /スクワット|レッグ|ランジ|カーフ|脚|尻|ヒップ|squat|leg\s*press|lunge|calf|glute|hip/i, parts: [["leg", 1]] },
+  { re: /ショルダー|オーバーヘッド|肩|サイドレイズ|フロントレイズ|shoulder|overhead|lateral\s*raise|front\s*raise|delt/i, parts: [["shoulder", 1]] },
+  { re: /ヒップスラスト|ヒップリフト|ヒップ|お尻|尻|グルート|グート|ブルガリアン|hip\s*thrust|hip\s*lift|glute|bulgarian|\bhip\b/i, parts: [["glute", 1]] },
+  { re: /スクワット|ランジ|squat|lunge/i, parts: [["leg", 0.65], ["glute", 0.35]] },
+  { re: /レッグ|カーフ|脚|leg\s*press|leg\s*extension|leg\s*curl|calf/i, parts: [["leg", 1]] },
   { re: /カール|二頭|三頭|トライセ|ディップ|プレスダウン|腕|curl|bicep|tricep|dip|pushdown|arm/i, parts: [["arm", 1]] },
 ];
 function classifyExercise(name) {
   for (const r of PART_RULES) if (r.re.test(name)) return r.parts;
-  return ALL_PARTS.map((p) => [p, 1 / 6]); // 不明な種目は全身に少しずつ
+  return ALL_PARTS.map((p) => [p, 1 / ALL_PARTS.length]); // 不明な種目は全身に少しずつ
 }
 // 記録に部位情報があればそれを優先（マイ種目は選んだ部位に均等配分）
 function partsOfLog(log) {
@@ -536,8 +538,8 @@ function limbPath(points, widths) {
 
 function MuscleCharacter({ levels, appearance }) {
   const uid = useId(); // このインスタンス固有のグラデid（複数表示時のid衝突・再描画不具合を防ぐ）
-  const { chest, shoulder, arm, back, leg, abs } = levels;
-  const mAvg = (chest + shoulder + arm + back + leg + abs) / 6;
+  const { chest, shoulder, arm, back, leg, abs, glute = 0 } = levels;
+  const mAvg = (chest + shoulder + arm + back + leg + abs + glute) / 7;
   const acc = appearance?.accessory || "none";
   const aura = appearance?.aura || "none";
   // サングラスは選択時、または無指定で十分育つと自動で装着
@@ -550,7 +552,7 @@ function MuscleCharacter({ levels, appearance }) {
   const shX = Math.max((44 + shoulder * 52 + back * 14) / 2, 23);
   const torsoTop = Math.min(shX - 2, 20 + back * 20 + chest * 8);
   const waistW = 27 + abs * 7 + back * 3;
-  const hipW = waistW + 7 + leg * 6;
+  const hipW = waistW + 7 + leg * 6 + glute * 9;
   const neckW = 10 + back * 6 + shoulder * 4;
   const deltR = 6 + shoulder * 12;
 
@@ -575,7 +577,7 @@ function MuscleCharacter({ levels, appearance }) {
     const lean = s * (2 + leg * 5);
     return [[hx, legTop], [hx + lean * 0.9, 165], [hx + lean, 183], [hx + lean, 194], [hx + lean, 207]];
   };
-  const legWidths = [13 + leg * 13, 12 + leg * 17, 8.5 + leg * 6, 8 + leg * 12, 6 + leg * 3];
+  const legWidths = [13 + leg * 13 + glute * 10, 12 + leg * 17 + glute * 4, 8.5 + leg * 6, 8 + leg * 12, 6 + leg * 3];
   const footX = (s) => legPts(s)[4][0] + s * 3;
 
   return (
@@ -988,7 +990,7 @@ export default function App() {
   const nextStage = STAGES[stageIdx + 1];
   const totalVolume = useMemo(() => data.logs.reduce((a, l) => a + l.weight * l.reps * l.sets, 0), [data.logs]);
   const partLevels = useMemo(() => {
-    const sc = { chest: 0, shoulder: 0, arm: 0, back: 0, leg: 0, abs: 0 };
+    const sc = Object.fromEntries(ALL_PARTS.map((p) => [p, 0]));
     data.logs.forEach((l) => {
       partsOfLog(l).forEach(([p, w]) => { sc[p] += (l.sets || 1) * w; });
     });
