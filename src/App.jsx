@@ -265,6 +265,40 @@ const addDays = (dateStr, n) => {
 };
 const roundPlate = (kg) => Math.max(2.5, Math.round(kg / 2.5) * 2.5);
 
+// ============ 分析（記録のグラフ化）ユーティリティ ============
+// 期間の開始日（"4w"=直近4週 / "3m"=直近3ヶ月 / "all"=全期間）
+const periodStartStr = (p) => (p === "all" ? "0000-00-00" : addDays(todayStr(), p === "4w" ? -27 : -90));
+// 自己ベスト★の10頂点（r≈7）。transformで配置し、scaleでサイズ調整
+const STAR_PTS = "0,-7 2.1,-2.9 6.7,-2.2 3.4,1.1 4.2,5.7 0,3.5 -4.2,5.7 -3.4,1.1 -6.7,-2.2 -2.1,-2.9";
+// 重量推移の折れ線グラフの座標を算出（外部ライブラリ不要の素のSVG用）
+function chartGeom(series, { w = 452, h = 186, padL = 34, padR = 12, padT = 14, padB = 36 } = {}) {
+  const n = series.length;
+  const ws = series.map((d) => d.w);
+  let min = n ? Math.min(...ws) : 0;
+  let max = n ? Math.max(...ws) : 1;
+  if (min === max) { min -= 5; max += 5; }
+  const pad = (max - min) * 0.15 || 5;
+  const lo = min - pad, hi = max + pad;
+  const innerW = w - padL - padR, innerH = h - padT - padB;
+  const x = (i) => (n <= 1 ? padL + innerW / 2 : padL + (i * innerW) / (n - 1));
+  const y = (v) => padT + (1 - (v - lo) / (hi - lo)) * innerH;
+  const pts = series.map((d, i) => [x(i), y(d.w)]);
+  const points = pts.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+  const baseY = h - padB;
+  const area = n
+    ? `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)} ` +
+      pts.slice(1).map((p) => `L ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ") +
+      ` L ${pts[n - 1][0].toFixed(1)} ${baseY} L ${pts[0][0].toFixed(1)} ${baseY} Z`
+    : "";
+  const stars = pts.filter((_, i) => series[i].isPR);
+  const yTicks = [0, 1, 2, 3].map((k) => { const v = lo + (hi - lo) * (k / 3); return { label: Math.round(v), y: y(v) }; });
+  const xIdx = n <= 4 ? series.map((_, i) => i) : [0, Math.round((n - 1) / 3), Math.round(((n - 1) * 2) / 3), n - 1];
+  const xTicks = [...new Set(xIdx)].map((i) => ({ x: x(i), label: fmtDate(series[i].date) }));
+  return { points, area, stars, dots: pts, yTicks, xTicks, baseY, w, h };
+}
+// 頻度カレンダーの濃淡色（0:無 → 3:濃）＋自己ベスト黄
+const CAL_LEVEL_COLORS = ["#181B1F", "#1E4634", "#2C7D57", "#3DC98B"];
+
 // ============ ストレージ（Claude内でも公開Webでも動く二段構え） ============
 // ・Claudeのアーティファクト内 → window.storage
 // ・WebアプリとしてVercel等に公開 → 各ユーザーのブラウザのlocalStorage（端末内に個人ごと保存）
@@ -382,6 +416,15 @@ const TXT = {
     myExTitle: "マイ種目", myExNote: "削除しても、過去の記録とキャラの成長はそのまま残ります。",
     emptyLogs1: "まだ記録がありません。", emptyLogs2: "最初の1セットが進化の始まりです。",
     uKg: "kg", uReps: "回", uSets: "セット", delAria: "削除", delMyExAria: "マイ種目を削除",
+    // 分析
+    analysis: "分析", seeDetails: "くわしく見る", backAria: "戻る",
+    weightTrend: "重量推移", freqTitle: "トレーニング頻度", freqNote: "色が濃いほどその日のボリュームが大きい",
+    pbHistory: "自己ベスト更新の履歴", allRecords: "すべての記録", showMore: "もっと見る", noMore: "これ以上の記録はありません",
+    p4w: "4週", p3m: "3ヶ月", pAll: "全期間",
+    sumDays: "TRAINING DAYS", sumVol: "TOTAL VOLUME", sumPr: "PR COUNT",
+    pbThisMonth: "今月の自己ベスト更新", timesUnit: "回", latest: "最新", recentWeeks: "直近8週",
+    legendLess: "少", legendMore: "多", pbLegend: "自己ベスト達成日", pbUpdated: "自己ベスト更新",
+    recordsUnit: "件", filteringBy: "絞り込み中", noPb: "まだ自己ベストの更新はありません。", analysisHint: "タップで推移・頻度・自己ベストをまとめて見る",
     // 進化
     tapToSpeak: "タップすると喋ります",
     trainingDays: "トレーニング日数",
@@ -459,6 +502,15 @@ const TXT = {
     myExTitle: "My Exercises", myExNote: "Deleting one keeps your past logs and character growth intact.",
     emptyLogs1: "No logs yet.", emptyLogs2: "Your first set is the start of your evolution.",
     uKg: "kg", uReps: " reps", uSets: " sets", delAria: "Delete", delMyExAria: "Delete my exercise",
+    // Analysis
+    analysis: "Analytics", seeDetails: "See details", backAria: "Back",
+    weightTrend: "Weight progression", freqTitle: "Training frequency", freqNote: "Darker = higher volume that day",
+    pbHistory: "Personal best history", allRecords: "All records", showMore: "Show more", noMore: "No more records",
+    p4w: "4 wks", p3m: "3 mos", pAll: "All",
+    sumDays: "TRAINING DAYS", sumVol: "TOTAL VOLUME", sumPr: "PR COUNT",
+    pbThisMonth: "PRs this month", timesUnit: "", latest: "Latest", recentWeeks: "Last 8 wks",
+    legendLess: "Less", legendMore: "More", pbLegend: "PR day", pbUpdated: "New PR",
+    recordsUnit: "", filteringBy: "Filtered", noPb: "No personal bests yet.", analysisHint: "Tap to see trends, frequency and PRs",
     tapToSpeak: "Tap to make it speak",
     trainingDays: "Training days",
     growthTitle: "Muscle growth by area",
@@ -882,6 +934,11 @@ export default function App() {
   const [customizeModal, setCustomizeModal] = useState(false); // キャラ着せ替えポップアップ
   const [langMenu, setLangMenu] = useState(false); // 言語選択ドロップダウン
   const [myExModal, setMyExModal] = useState(false); // マイ種目の管理ポップアップ
+  // ---- 分析（記録のグラフ化） ----
+  const [analysisOpen, setAnalysisOpen] = useState(false); // 記録タブ内のサブ画面切替
+  const [trendEx, setTrendEx] = useState(null); // 重量推移の対象種目（null=最多記録の種目）
+  const [period, setPeriod] = useState("3m"); // "4w" | "3m" | "all"
+  const [recLimit, setRecLimit] = useState(30); // 「すべての記録」の表示件数
 
   useEffect(() => {
     (async () => {
@@ -998,6 +1055,73 @@ export default function App() {
     ALL_PARTS.forEach((p) => { lv[p] = sc[p] / (sc[p] + 18); }); // セット数が増えるほど1に近づく
     return lv;
   }, [data.logs]);
+
+  // ---- 分析用の集計（すべて data.logs から導出。保存項目は増やさない） ----
+  // 記録に登場する種目を「記録件数の多い順」に（ピル表示＋推移グラフの既定種目）
+  const loggedExercises = useMemo(() => {
+    const cnt = {};
+    data.logs.forEach((l) => { cnt[l.exercise] = (cnt[l.exercise] || 0) + 1; });
+    return Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
+  }, [data.logs]);
+  const effTrendEx = (trendEx && loggedExercises.includes(trendEx)) ? trendEx : (loggedExercises[0] || null);
+  // 日ごとの総挙上量（頻度カレンダーの濃淡）
+  const volByDay = useMemo(() => {
+    const m = {};
+    data.logs.forEach((l) => { m[l.date] = (m[l.date] || 0) + l.weight * l.reps * l.sets; });
+    return m;
+  }, [data.logs]);
+  // 自己ベスト更新の履歴（種目ごとに過去最高を追い、l.pr の記録で from→to を記録）新しい順
+  const prHistory = useMemo(() => {
+    const asc = [...data.logs].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id));
+    const best = {}; const out = [];
+    asc.forEach((l) => {
+      const prev = best[l.exercise] || 0;
+      if (l.pr && prev > 0) out.push({ exercise: l.exercise, from: prev, to: l.weight, date: l.date, id: l.id });
+      best[l.exercise] = Math.max(prev, l.weight);
+    });
+    return out.reverse();
+  }, [data.logs]);
+  const prDateSet = useMemo(() => new Set(data.logs.filter((l) => l.pr).map((l) => l.date)), [data.logs]);
+  // 対象種目・期間での日ごとの最大重量（重量推移の折れ線）
+  const trendSeries = useMemo(() => {
+    if (!effTrendEx) return [];
+    const start = periodStartStr(period);
+    const m = {}; const prDay = {};
+    data.logs.forEach((l) => {
+      if (l.exercise !== effTrendEx || l.date < start) return;
+      m[l.date] = Math.max(m[l.date] || 0, l.weight);
+      if (l.pr) prDay[l.date] = true;
+    });
+    return Object.keys(m).sort().map((d) => ({ date: d, w: m[d], isPR: !!prDay[d] }));
+  }, [data.logs, effTrendEx, period]);
+  // 期間内サマリー（トレーニング日数・総挙上量・PR回数）
+  const summary = useMemo(() => {
+    const start = periodStartStr(period);
+    const inP = data.logs.filter((l) => l.date >= start);
+    return {
+      days: new Set(inP.map((l) => l.date)).size,
+      volume: inP.reduce((a, l) => a + l.weight * l.reps * l.sets, 0),
+      prCount: inP.filter((l) => l.pr).length,
+    };
+  }, [data.logs, period]);
+  // 頻度カレンダーのセル配列（月曜始まり・7行×weeks列、古い→新しい＝左→右）
+  const makeCalendar = (weeks) => {
+    const base = new Date(todayStr() + "T00:00:00");
+    const dow = (base.getDay() + 6) % 7; // 月=0
+    const end = new Date(base); end.setDate(base.getDate() + (6 - dow)); // 今週の日曜
+    const maxVol = Math.max(1, ...Object.values(volByDay));
+    const cells = [];
+    for (let i = weeks * 7 - 1; i >= 0; i--) {
+      const d = new Date(end); d.setDate(end.getDate() - i);
+      const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const v = volByDay[ds] || 0;
+      const r = v / maxVol;
+      const level = v <= 0 ? 0 : r > 0.66 ? 3 : r > 0.33 ? 2 : 1;
+      cells.push({ date: ds, level, isPR: prDateSet.has(ds), future: ds > todayStr() });
+    }
+    return cells;
+  };
+
   // ---- ストリーク（中2日以内=間隔3日以内でトレーニングを続けた連続回数） ----
   const streak = useMemo(() => {
     const days = [...new Set(data.logs.map((l) => l.date))].sort().reverse();
@@ -1291,7 +1415,7 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: T.pageGrad, fontFamily: T.body, color: T.ink, paddingBottom: 92 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700&family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0..1,0&icon_names=calendar_month,check_circle,date_range,edit_note,exercise,fitness_center,helicopter,lightbulb,list_alt,local_fire_department,local_shipping,menu_book,military_tech,notifications_active,pause,play_arrow,restart_alt,settings,timer,trophy&display=block');
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0..1,0&icon_names=arrow_back,calendar_month,check_circle,chevron_right,date_range,edit_note,exercise,fitness_center,helicopter,lightbulb,list_alt,local_fire_department,local_shipping,menu_book,military_tech,monitoring,notifications_active,pause,play_arrow,restart_alt,settings,timer,trending_up,trophy&display=block');
         /* Viteテンプレートやブラウザ標準の余白・背景を打ち消す（スマホの白枠対策） */
         html, body { margin: 0 !important; padding: 0 !important; background: #07080A !important; }
         body { overflow-x: hidden; }
@@ -1411,7 +1535,183 @@ export default function App() {
 
       <main style={{ maxWidth: 520, margin: "0 auto", padding: 16 }}>
         {/* ===== 記録 ===== */}
-        {tab === "log" && (
+        {/* ===== 分析（記録タブ内のサブ画面） ===== */}
+        {tab === "log" && analysisOpen && (
+          <div style={{ display: "grid", gap: 14 }}>
+            {/* ヘッダー */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "2px 2px 0" }}>
+              <button onClick={() => setAnalysisOpen(false)} aria-label={tx.backAria}
+                style={{ border: "none", background: "none", padding: 2, cursor: "pointer", display: "flex", alignItems: "center" }}>
+                <span className="msym" style={{ fontSize: 24, color: T.ink }}>arrow_back</span>
+              </button>
+              <h2 style={{ ...h2Style, fontSize: 19, textShadow: T.emboss }}>{tx.analysis}</h2>
+              <span style={{ marginLeft: "auto", fontFamily: T.cond, fontWeight: 700, fontSize: 12, letterSpacing: 2, color: T.sub2 }}>ANALYTICS</span>
+            </div>
+
+            {/* 期間切替 */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", border: `1px solid ${T.line2}`, borderRadius: 4, overflow: "hidden", background: T.surface2 }}>
+              {[["4w", tx.p4w], ["3m", tx.p3m], ["all", tx.pAll]].map(([p, label], i) => {
+                const on = period === p;
+                return (
+                  <button key={p} onClick={() => setPeriod(p)}
+                    style={{ padding: "10px 0", textAlign: "center", fontSize: 13, fontWeight: 800, border: "none", cursor: "pointer", fontFamily: T.body,
+                      borderRight: i < 2 ? `1px solid ${T.line}` : "none",
+                      color: on ? "#0D0F13" : T.sub, background: on ? `linear-gradient(180deg, ${T.redBright}, ${T.redDeep})` : "transparent" }}>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* サマリー3連 */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+              {[[tx.sumDays, String(summary.days), tx.dayUnit, T.ink],
+                [tx.sumVol, (summary.volume / 1000).toFixed(summary.volume >= 100000 ? 0 : 1), "t", T.ink],
+                [tx.sumPr, String(summary.prCount), tx.timesUnit, T.yellow]].map(([lab, val, unit, col]) => (
+                <div key={lab} style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: 4, padding: "11px 8px", textAlign: "center", boxShadow: "inset 0 1px 0 rgba(255,255,255,.07)" }}>
+                  <p style={{ margin: 0, fontFamily: T.cond, fontSize: 10, letterSpacing: 1.5, color: T.sub2 }}>{lab}</p>
+                  <p style={{ margin: "3px 0 0", fontFamily: T.num, fontSize: 24, color: col, letterSpacing: 1 }}>{val}<span style={{ fontSize: 12, color: T.sub, marginLeft: 2 }}>{unit}</span></p>
+                </div>
+              ))}
+            </div>
+
+            {/* 重量推移 */}
+            <section style={{ ...cardStyle, borderLeft: `5px solid ${T.redBright}` }}>
+              <h3 style={{ ...h2Style, margin: "0 0 10px", display: "flex", alignItems: "center", gap: 7 }}>
+                <span className="msym" style={{ fontSize: 19, color: T.redBright }}>trending_up</span>{tx.weightTrend}
+              </h3>
+              {loggedExercises.length === 0 ? (
+                <p style={{ margin: 0, fontSize: 13, color: T.sub }}>{tx.emptyLogs1}</p>
+              ) : (<>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+                  {loggedExercises.slice(0, 6).map((ex) => {
+                    const on = ex === effTrendEx;
+                    return (
+                      <button key={ex} onClick={() => setTrendEx(ex)}
+                        style={{ padding: "6px 13px", borderRadius: 999, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: T.body,
+                          background: on ? T.red : T.surface2, border: on ? "none" : `1px solid ${T.line2}`, color: on ? "#fff" : T.sub }}>
+                        {exName(ex, lang)}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ background: T.surface2, border: `1px solid ${T.line}`, borderRadius: 8, padding: "10px 6px 4px", boxShadow: T.groove }}>
+                  {(() => {
+                    const g = chartGeom(trendSeries);
+                    return (
+                      <svg viewBox={`0 0 ${g.w} ${g.h}`} style={{ width: "100%", height: "auto", display: "block" }}>
+                        <defs><linearGradient id="trendArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={T.redBright} stopOpacity="0.32" /><stop offset="100%" stopColor={T.redBright} stopOpacity="0" /></linearGradient></defs>
+                        <g stroke="#22262B" strokeWidth="1">{g.yTicks.map((t, i) => <line key={i} x1="34" y1={t.y} x2={g.w - 12} y2={t.y} />)}</g>
+                        <g fontFamily={T.cond} fontSize="12" fill={T.sub2} textAnchor="end">{g.yTicks.map((t, i) => <text key={i} x="28" y={t.y + 4}>{t.label}</text>)}</g>
+                        {trendSeries.length > 0 && (<>
+                          <path d={g.area} fill="url(#trendArea)" />
+                          <polyline points={g.points} fill="none" stroke={T.redBright} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+                          <g fill={T.surface} stroke={T.redBright} strokeWidth="2">{g.dots.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r="3.2" />)}</g>
+                          <g fill={T.yellow} stroke="#0D0F13" strokeWidth="1">{g.stars.map((p, i) => <polygon key={i} points={STAR_PTS} transform={`translate(${p[0]},${p[1]})`} />)}</g>
+                          <g fontFamily={T.cond} fontSize="12" fill={T.sub2} textAnchor="middle">{g.xTicks.map((t, i) => <text key={i} x={t.x} y={g.h - 10}>{t.label}</text>)}</g>
+                        </>)}
+                        {trendSeries.length === 0 && <text x={g.w / 2} y={g.h / 2} fill={T.sub2} fontSize="13" textAnchor="middle" fontFamily={T.body}>{tx.emptyLogs1}</text>}
+                      </svg>
+                    );
+                  })()}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 9, fontSize: 11, color: T.sub }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}><svg width="14" height="14" viewBox="-8 -8 16 16"><polygon points={STAR_PTS} fill={T.yellow} /></svg>{tx.pbUpdated}</span>
+                </div>
+              </>)}
+            </section>
+
+            {/* 頻度カレンダー */}
+            <section style={{ ...cardStyle, borderLeft: `5px solid ${T.green}` }}>
+              <h3 style={{ ...h2Style, margin: "0 0 4px", display: "flex", alignItems: "center", gap: 7 }}>
+                <span className="msym" style={{ fontSize: 19, color: T.green }}>calendar_month</span>{tx.freqTitle}
+              </h3>
+              <p style={{ margin: "0 0 12px", fontSize: 12, color: T.sub }}>{tx.freqNote}</p>
+              <div style={{ overflowX: "auto" }}>
+                {(() => {
+                  const weeks = period === "4w" ? 8 : period === "3m" ? 13 : 20;
+                  return (
+                    <div style={{ display: "grid", gridAutoFlow: "column", gridTemplateRows: "repeat(7,13px)", gridAutoColumns: "13px", gap: 4 }}>
+                      {makeCalendar(weeks).map((c) => (
+                        <i key={c.date} title={fmtDate(c.date)} style={{ borderRadius: 2, background: c.future ? "transparent" : c.isPR ? T.yellow : CAL_LEVEL_COLORS[c.level], boxShadow: (!c.future && c.level === 0 && !c.isPR) ? "inset 0 0 0 1px #2A2E34" : "none" }} />
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 11, fontSize: 11, color: T.sub2, flexWrap: "wrap" }}>
+                <span>{tx.legendLess}</span>
+                {CAL_LEVEL_COLORS.map((c, i) => <i key={i} style={{ width: 12, height: 12, background: c, borderRadius: 2, boxShadow: i === 0 ? "inset 0 0 0 1px #3A3F46" : "none" }} />)}
+                <span>{tx.legendMore}</span>
+                <span style={{ marginLeft: 14, display: "flex", alignItems: "center", gap: 5 }}><i style={{ width: 12, height: 12, background: T.yellow, borderRadius: 2 }} />{tx.pbLegend}</span>
+              </div>
+            </section>
+
+            {/* 自己ベスト履歴 */}
+            <section style={{ ...cardStyle, borderLeft: `5px solid ${T.yellow}` }}>
+              <h3 style={{ ...h2Style, margin: "0 0 12px", display: "flex", alignItems: "center", gap: 7 }}>
+                <span className="msym on" style={{ fontSize: 19, color: T.yellow }}>military_tech</span>{tx.pbHistory}
+              </h3>
+              {prHistory.length === 0 ? (
+                <p style={{ margin: 0, fontSize: 13, color: T.sub }}>{tx.noPb}</p>
+              ) : (
+                <div>
+                  {prHistory.slice(0, 20).map((p) => (
+                    <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 0", borderTop: `1px solid ${T.line}` }}>
+                      <svg width="20" height="20" viewBox="-9 -9 18 18" style={{ flex: "none" }}><polygon points={STAR_PTS} transform="scale(1.15)" fill={T.yellow} /></svg>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <strong style={{ fontSize: 14, fontWeight: 700 }}>{exName(p.exercise, lang)}</strong>
+                        <div style={{ fontSize: 12, color: T.sub, marginTop: 2 }}>{p.from}{tx.uKg} → <span style={{ fontFamily: T.num, fontSize: 16, color: T.yellow }}>{p.to}</span>{tx.uKg}</div>
+                      </div>
+                      <span style={{ fontFamily: T.cond, fontSize: 14, letterSpacing: 1, color: T.sub2 }}>{fmtDate(p.date)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* すべての記録 */}
+            <section style={cardStyle}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                <h3 style={{ ...h2Style, display: "flex", alignItems: "center", gap: 7 }}><span className="msym" style={{ fontSize: 19, color: T.sub }}>edit_note</span>{tx.allRecords}</h3>
+                <span style={{ fontSize: 11, color: T.sub2 }}><span style={{ fontFamily: T.num, fontSize: 15, color: T.ink }}>{data.logs.length}</span> {tx.recordsUnit}</span>
+              </div>
+              <p style={{ margin: "0 0 10px", fontSize: 11, color: T.sub2 }}>{tx.filteringBy}：{period === "4w" ? tx.p4w : period === "3m" ? tx.p3m : tx.pAll}</p>
+              {(() => {
+                const start = periodStartStr(period);
+                const filtered = data.logs.filter((l) => l.date >= start);
+                const limited = filtered.slice(0, recLimit);
+                const map = {};
+                limited.forEach((l) => { (map[l.date] = map[l.date] || []).push(l); });
+                const days = Object.keys(map).sort((a, b) => (a < b ? 1 : -1));
+                if (days.length === 0) return <p style={{ margin: "6px 0 0", fontSize: 13, color: T.sub }}>{tx.emptyLogs1}</p>;
+                return (<>
+                  {days.map((date) => (
+                    <div key={date} style={{ marginTop: 10 }}>
+                      <h4 style={{ margin: "0 0 2px", fontSize: 13, color: date === todayStr() ? T.red : T.sub, fontWeight: 800, letterSpacing: 1 }}>{date === todayStr() ? `TODAY ${fmtDate(date)}` : fmtDate(date)}</h4>
+                      {map[date].map((l) => (
+                        <div key={l.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderTop: `1px solid ${T.line}` }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <strong style={{ fontWeight: 700, fontSize: 14 }}>{exName(l.exercise, lang)}</strong>
+                            {l.pr && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 900, color: "#17181C", background: T.yellow, borderRadius: 6, padding: "2px 6px", verticalAlign: "middle" }}>PR</span>}
+                            <div style={{ color: T.sub, fontSize: 13, marginTop: 2 }}><span style={{ fontFamily: T.num, color: T.ink, fontSize: 15 }}>{l.weight}</span>{tx.uKg} × <span style={{ fontFamily: T.num, color: T.ink, fontSize: 15 }}>{l.reps}</span>{tx.uReps} × <span style={{ fontFamily: T.num, color: T.ink, fontSize: 15 }}>{l.sets}</span>{tx.uSets}</div>
+                          </div>
+                          <span style={{ flex: "none", whiteSpace: "nowrap", fontFamily: T.cond, fontSize: 13, color: T.sub2, letterSpacing: 1 }}>{(l.weight * l.reps * l.sets).toLocaleString()}{tx.uKg}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                  {filtered.length > recLimit && (
+                    <div onClick={() => setRecLimit((n) => n + 30)} style={{ marginTop: 14, padding: 11, textAlign: "center", border: `1px solid ${T.line2}`, borderRadius: 4, background: T.surface2, fontSize: 13, fontWeight: 800, color: T.sub, cursor: "pointer" }}>{tx.showMore}</div>
+                  )}
+                </>);
+              })()}
+            </section>
+          </div>
+        )}
+
+        {/* ===== 記録 ===== */}
+        {tab === "log" && !analysisOpen && (
           <div style={{ display: "grid", gap: 14 }}>
             {/* ストリーク＆今週 */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -1651,6 +1951,81 @@ export default function App() {
                   <span style={{ fontFamily: T.num, fontSize: 16, color: T.yellow, marginLeft: 2 }}>{data.customExercises.length}</span>
                 </span>
                 <span className="msym" style={{ fontSize: 20, color: T.sub }}>settings</span>
+              </button>
+            )}
+
+            {/* ▼ 分析カード（記録が3件以上たまったら表示。タップで詳細分析へ） */}
+            {data.logs.length >= 3 && (
+              <button onClick={() => setAnalysisOpen(true)}
+                style={{ ...cardStyle, borderLeft: `5px solid ${T.blue}`, width: "100%", textAlign: "left", cursor: "pointer", padding: 18, display: "block" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                  <span style={{ ...h2Style, display: "flex", alignItems: "center", gap: 7 }}>
+                    <span className="msym" style={{ fontSize: 19, color: T.blue }}>monitoring</span>{tx.analysis}
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 2, fontSize: 11, fontWeight: 800, color: T.blue, letterSpacing: 1 }}>{tx.seeDetails}<span className="msym" style={{ fontSize: 16 }}>chevron_right</span></span>
+                </div>
+
+                {/* 主種目スパークライン */}
+                {effTrendEx && (() => {
+                  const m = {}; const prDay = {};
+                  data.logs.forEach((l) => { if (l.exercise !== effTrendEx) return; m[l.date] = Math.max(m[l.date] || 0, l.weight); if (l.pr) prDay[l.date] = true; });
+                  const s = Object.keys(m).sort().map((d) => ({ date: d, w: m[d], isPR: !!prDay[d] }));
+                  const g = chartGeom(s, { w: 420, h: 92, padL: 8, padR: 8, padT: 10, padB: 18 });
+                  const latest = s.length ? s[s.length - 1].w : 0;
+                  const delta = s.length ? latest - s[0].w : 0;
+                  const last = g.dots[g.dots.length - 1];
+                  return (
+                    <div style={{ marginTop: 14, padding: "12px 12px 8px", background: T.surface2, border: `1px solid ${T.line}`, borderRadius: 8 }}>
+                      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4 }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: T.ink }}>{exName(effTrendEx, lang)}</span>
+                        <span style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                          <span style={{ fontFamily: T.num, fontSize: 26, color: T.ink, letterSpacing: 1 }}>{latest}</span>
+                          <span style={{ fontSize: 11, color: T.sub, fontWeight: 700 }}>{tx.uKg}</span>
+                          {delta > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: T.green, marginLeft: 6, display: "flex", alignItems: "center", gap: 2 }}><span className="msym" style={{ fontSize: 14 }}>trending_up</span>+{delta}{tx.uKg}</span>}
+                        </span>
+                      </div>
+                      <svg viewBox={`0 0 ${g.w} ${g.h}`} style={{ width: "100%", height: "auto", display: "block" }} preserveAspectRatio="none">
+                        <defs><linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={T.redBright} stopOpacity="0.34" /><stop offset="100%" stopColor={T.redBright} stopOpacity="0" /></linearGradient></defs>
+                        {s.length > 0 && (<>
+                          <path d={g.area} fill="url(#sparkArea)" />
+                          <polyline points={g.points} fill="none" stroke={T.redBright} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+                          <polygon points={STAR_PTS} transform={`translate(${last[0]},${last[1]})`} fill={T.yellow} stroke="#0D0F13" strokeWidth="1" />
+                        </>)}
+                      </svg>
+                      {s.length > 0 && <div style={{ display: "flex", justifyContent: "space-between", fontFamily: T.cond, fontSize: 11, letterSpacing: 1, color: T.sub2 }}><span>{fmtDate(s[0].date)}</span><span>{fmtDate(s[s.length - 1].date)}</span></div>}
+                    </div>
+                  );
+                })()}
+
+                {/* 直近8週の頻度 */}
+                {(() => {
+                  const cells = makeCalendar(8);
+                  const cnt = cells.filter((c) => !c.future && (c.level > 0 || c.isPR)).length;
+                  return (
+                    <div style={{ marginTop: 10, padding: 12, background: T.surface2, border: `1px solid ${T.line}`, borderRadius: 8 }}>
+                      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 9 }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: T.ink }}>{tx.freqTitle}</span>
+                        <span style={{ fontSize: 11, color: T.sub }}>{tx.recentWeeks} <span style={{ fontFamily: T.num, fontSize: 15, color: T.green }}>{cnt}</span>{tx.dayUnit}</span>
+                      </div>
+                      <div style={{ display: "grid", gridAutoFlow: "column", gridTemplateRows: "repeat(7,11px)", gridAutoColumns: "11px", gap: 4 }}>
+                        {cells.map((c) => (<i key={c.date} style={{ borderRadius: 2, background: c.future ? "transparent" : c.isPR ? T.yellow : CAL_LEVEL_COLORS[c.level], boxShadow: (!c.future && c.level === 0 && !c.isPR) ? "inset 0 0 0 1px #2A2E34" : "none" }} />))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* 今月の自己ベスト */}
+                {(() => {
+                  const ym = todayStr().slice(0, 7);
+                  const monthPrs = prHistory.filter((p) => p.date.startsWith(ym)).length;
+                  return (
+                    <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 9, padding: "10px 12px", background: "rgba(232,195,58,.09)", borderLeft: `2px solid ${T.yellow}` }}>
+                      <span className="msym on" style={{ fontSize: 18, color: T.yellow, flex: "none" }}>military_tech</span>
+                      <span style={{ fontSize: 12, color: T.ink, fontWeight: 700 }}>{tx.pbThisMonth} <span style={{ fontFamily: T.num, fontSize: 17, color: T.yellow, margin: "0 2px" }}>{monthPrs}</span>{tx.timesUnit}</span>
+                      {prHistory[0] && <span style={{ marginLeft: "auto", fontSize: 11, color: T.sub }}>{tx.latest}：{exName(prHistory[0].exercise, lang)} {prHistory[0].to}{tx.uKg}</span>}
+                    </div>
+                  );
+                })()}
               </button>
             )}
 
@@ -2666,7 +3041,7 @@ export default function App() {
           {tabs.map((t, i) => {
             const active = tab === t.id;
             return (
-              <button key={t.id} onClick={() => setTab(t.id)}
+              <button key={t.id} onClick={() => { setTab(t.id); setAnalysisOpen(false); }}
                 style={{
                   position: "relative", flex: 1, border: "none",
                   borderLeft: i === 0 ? "none" : "1px solid rgba(255,255,255,.05)",
